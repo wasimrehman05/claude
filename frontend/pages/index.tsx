@@ -276,57 +276,19 @@ export default function Home() {
                 <link rel="icon" href="/favicon.ico" />
             </Head>
 
-            <div className="h-screen flex" style={{ backgroundColor: 'var(--claude-chat-bg)', width: '100vw' }}>
-                                {/* Left Chat Panel - Dark Theme */}
+            <div className="h-screen flex justify-center w-screen" style={{ backgroundColor: 'var(--claude-chat-bg)' }}>
+                {/* Left Chat Panel - Dark Theme */}
                 <div className={clsx(
                     "flex flex-col transition-all duration-300",
                     artifactViewerOpen ? "w-3/5" : "w-full"
                 )}
-                style={{ 
-                    backgroundColor: 'var(--claude-chat-bg)'
-                }}>
-                    {/* Chat Header */}
-                                        <header 
-                        className="flex-shrink-0 px-6 py-4"
-                        style={{ 
-                            backgroundColor: 'var(--claude-chat-bg)'
-                        }}
-                    >
-                        <div className="flex items-center gap-3">
-                            <div
-                                className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-sm"
-                                style={{ backgroundColor: 'var(--claude-accent)' }}
-                            >
-                                C
-                            </div>
-                            <h1
-                                className="text-lg font-medium tracking-tight"
-                                style={{ color: 'var(--claude-chat-text)' }}
-                            >
-                                Claude
-                            </h1>
-                        </div>
-                    </header>
-
-                    {/* Error Banner */}
-                    {error && (
-                        <div className="bg-red-50 border-b border-red-200 px-4 py-3">
-                            <div className="max-w-4xl mx-auto flex items-center gap-2 text-red-800 text-sm">
-                                <span className="font-medium">Error:</span>
-                                <span>{error}</span>
-                                <button
-                                    onClick={() => setError(null)}
-                                    className="ml-auto text-red-600 hover:text-red-800 text-lg"
-                                >
-                                    ×
-                                </button>
-                            </div>
-                        </div>
-                    )}
-
+                    style={{
+                        backgroundColor: 'var(--claude-chat-bg)',
+                        borderRight: artifactViewerOpen ? `1px solid var(--claude-chat-border)` : 'none'
+                    }}>
                     {/* Chat Messages */}
-                    <div className="flex-1 overflow-y-auto scrollbar-thin">
-                        <div className="min-h-full">
+                    <div className="flex-1 overflow-y-auto scrollbar-thin px-4 py-6">
+                        <div className="max-w-4xl mx-auto">
                             <MessageList
                                 messages={messages}
                                 artifacts={artifacts}
@@ -335,7 +297,7 @@ export default function Home() {
                             />
                             {isStreaming && (
                                 <div className="flex justify-center py-4">
-                                    <div className="flex items-center gap-2 text-gray-500">
+                                    <div className="flex items-center gap-2 text-gray-400">
                                         <Loader2 className="w-4 h-4 animate-spin" />
                                         <span className="text-sm">Claude is thinking...</span>
                                     </div>
@@ -364,44 +326,6 @@ export default function Home() {
                             className="hidden lg:flex flex-col w-2/5"
                             style={{ backgroundColor: 'var(--claude-artifact-bg)' }}
                         >
-                            {/* Artifact Header */}
-                            <div
-                                className="flex items-center justify-between px-6 py-4 border-b"
-                                style={{
-                                    backgroundColor: 'var(--claude-artifact-header-bg)',
-                                    borderColor: 'var(--claude-artifact-border)'
-                                }}
-                            >
-                                <div className="flex items-center gap-3">
-
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <button
-                                        className="flex items-center gap-2 px-3 py-1.5 text-sm rounded-lg border hover:bg-gray-50 transition-colors"
-                                        style={{
-                                            borderColor: 'var(--claude-artifact-border)',
-                                            color: 'var(--claude-artifact-text-secondary)'
-                                        }}
-                                    >
-                                        <Copy className="w-4 h-4" />
-                                        Copy
-                                    </button>
-                                    <button
-                                        className="flex items-center gap-2 px-3 py-1.5 text-sm text-white rounded-lg transition-colors"
-                                        style={{ backgroundColor: 'var(--claude-accent)' }}
-                                    >
-                                        Publish
-                                    </button>
-                                    <button
-                                        onClick={() => setArtifactViewerOpen(false)}
-                                        className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
-                                        style={{ color: 'var(--claude-artifact-text-secondary)' }}
-                                    >
-                                        <X className="w-4 h-4" />
-                                    </button>
-                                </div>
-                            </div>
-
                             <ArtifactViewer
                                 artifact={selectedArtifact}
                                 allArtifacts={messageArtifacts}
@@ -434,7 +358,7 @@ export default function Home() {
                                 transition={{ duration: 0.2 }}
                                 className="absolute inset-4 bg-white rounded-lg shadow-2xl overflow-hidden"
                                 onClick={(e) => e.stopPropagation()}
-                                style={{ backgroundColor: 'var(--claude-surface)' }}
+                                style={{ backgroundColor: 'var(--claude-artifact-bg)' }}
                             >
                                 <ArtifactViewer
                                     artifact={selectedArtifact}

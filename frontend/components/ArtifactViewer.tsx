@@ -1,8 +1,9 @@
-import React, { useState,useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Editor } from '@monaco-editor/react';
 import { X, Code2, Eye, Download, Copy, Check, ChevronDown, ChevronUp } from 'lucide-react';
 import { clsx } from 'clsx';
 import { motion, AnimatePresence } from 'framer-motion';
+import JSZip from 'jszip';
 
 export type Artifact = {
     id?: string;
@@ -32,10 +33,8 @@ export default function ArtifactViewer({
 }: ArtifactViewerProps) {
 
     const [selectedArtifact, setSelectedArtifact] = useState<Artifact>(artifact);
-    
-
     const [activeTab, setActiveTab] = useState<'code' | 'preview'>(() => {
-        const hasHtml = allArtifacts.some(a => 
+        const hasHtml = allArtifacts.some(a =>
             a.language?.toLowerCase() === 'html' ||
             a.filename.endsWith('.html') ||
             a.content.includes('<html') ||
@@ -48,7 +47,6 @@ export default function ArtifactViewer({
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
     const [artifactListOpen, setArtifactListOpen] = useState(false);
 
-
     useEffect(() => {
         setSelectedArtifact(artifact);
         setEditedContent('');
@@ -57,15 +55,13 @@ export default function ArtifactViewer({
 
     const currentContent = hasUnsavedChanges ? editedContent : selectedArtifact.content;
 
-
-    const hasHtmlArtifact = allArtifacts.some(a => 
+    const hasHtmlArtifact = allArtifacts.some(a =>
         a.language?.toLowerCase() === 'html' ||
         a.filename.endsWith('.html') ||
         a.content.includes('<html') ||
         a.content.includes('<!DOCTYPE')
     );
     const canPreview = hasHtmlArtifact;
-
 
     const getEditorLanguage = () => {
         const lang = selectedArtifact.language?.toLowerCase();
@@ -112,18 +108,31 @@ export default function ArtifactViewer({
         }
     }, [currentContent]);
 
-    const downloadFile = useCallback(() => {
-        const blob = new Blob([currentContent], { type: 'text/plain' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = selectedArtifact.filename;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-    }, [currentContent, selectedArtifact.filename]);
-
+    const downloadAllFiles = useCallback(async () => {
+        try {
+            const zip = new JSZip();
+            
+            // Add all artifacts to the zip
+            allArtifacts.forEach(artifact => {
+                zip.file(artifact.filename, artifact.content);
+            });
+            
+            // Generate the zip file
+            const zipBlob = await zip.generateAsync({ type: 'blob' });
+            
+            // Create download link
+            const url = URL.createObjectURL(zipBlob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${title || 'project'}.zip`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        } catch (err) {
+            console.error('Failed to create zip file:', err);
+        }
+    }, [allArtifacts, title]);
 
     const createCombinedPreview = useCallback(() => {
         const htmlArtifact = allArtifacts.find(a =>
@@ -144,17 +153,15 @@ export default function ArtifactViewer({
             a.filename.endsWith('.js')
         );
 
-
-        const viewportAndCss = cssArtifacts.length > 0 
+        const viewportAndCss = cssArtifacts.length > 0
             ? `  <meta name="viewport" content="width=device-width, initial-scale=1.0">\n  <style>\n${cssArtifacts.map(a => a.content).join('\n\n')}\n  </style>`
             : `  <meta name="viewport" content="width=device-width, initial-scale=1.0">`;
-            
+
         if (htmlContent.includes('</head>')) {
             htmlContent = htmlContent.replace('</head>', `${viewportAndCss}\n</head>`);
         } else if (htmlContent.includes('<head>')) {
             htmlContent = htmlContent.replace('<head>', `<head>\n${viewportAndCss}`);
         } else {
-
             const headTag = `<head>\n${viewportAndCss}\n</head>\n`;
             if (htmlContent.includes('<html>')) {
                 htmlContent = htmlContent.replace('<html>', `<html>\n${headTag}`);
@@ -162,7 +169,6 @@ export default function ArtifactViewer({
                 htmlContent = `<!DOCTYPE html>\n<html>\n${headTag}${htmlContent}\n</html>`;
             }
         }
-
 
         if (jsArtifacts.length > 0) {
             const combinedJS = jsArtifacts.map(a => a.content).join('\n\n');
@@ -194,13 +200,21 @@ export default function ArtifactViewer({
                             className="text-sm font-medium"
                             style={{ color: 'var(--claude-artifact-text-secondary)', border: '1px solid var(--claude-border)' }}
                         >
-                            Artifacts ({allArtifacts.length})
+                            <strong className='text-base'>{title}</strong> ({allArtifacts.length})
                         </span>
-                        {artifactListOpen ? (
-                            <ChevronUp className="w-4 h-4 text-gray-500" />
-                        ) : (
-                            <ChevronDown className="w-4 h-4 text-gray-500" />
-                        )}
+                        <div className='flex items-center gap-2'>
+                            {artifactListOpen ? (
+                                <ChevronUp className="w-4 h-4 text-gray-500" />
+                            ) : (
+                                <ChevronDown className="w-4 h-4 text-gray-500" />
+                            )}
+                            <button
+                                onClick={onClose}
+                                className="p-1 rounded-md hover:bg-gray-100 transition-colors"
+                            >
+                                <X className="w-5 h-5 text-gray-500" />
+                            </button>
+                        </div>
                     </button>
                     <AnimatePresence>
                         {artifactListOpen && (
@@ -258,117 +272,82 @@ export default function ArtifactViewer({
                 className="border-b"
                 style={{ borderColor: 'var(--claude-artifact-border)' }}
             >
-                {/* Title Section */}
-                {title && (
-                    <div className="px-6 py-3 border-b" style={{ borderColor: 'var(--claude-artifact-border)' }}>
-                        <div className="flex items-center justify-between">
-                            <h2 className="text-lg font-semibold text-gray-800">{title}</h2>
-                            <button
-                                onClick={onClose}
-                                className="p-1 rounded-md hover:bg-gray-100 transition-colors"
-                            >
-                                <X className="w-5 h-5 text-gray-500" />
-                            </button>
-                        </div>
-                    </div>
-                )}
-                
                 {/* Tab Bar */}
                 <div className="flex items-center justify-between px-6 py-3">
                     <div
                         className="flex items-center gap-1 p-1 rounded-lg"
                         style={{ backgroundColor: 'var(--claude-artifact-surface)' }}
                     >
-                    <button
-                        onClick={() => setActiveTab('code')}
-                        className={clsx(
-                            "flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors",
-                            activeTab === 'code'
-                                ? "shadow-sm"
-                                : "hover:bg-gray-100"
-                        )}
-                        style={{
-                            backgroundColor: activeTab === 'code' ? 'var(--claude-artifact-bg)' : 'transparent',
-                            color: activeTab === 'code' ? 'var(--claude-artifact-text)' : 'var(--claude-artifact-text-secondary)'
-                        }}
-                    >
-                        <Code2 className="w-4 h-4" />
-                        Code
-                    </button>
-                    {canPreview && (
                         <button
-                            onClick={() => setActiveTab('preview')}
+                            onClick={() => setActiveTab('code')}
                             className={clsx(
                                 "flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors",
-                                activeTab === 'preview'
+                                activeTab === 'code'
                                     ? "shadow-sm"
                                     : "hover:bg-gray-100"
                             )}
                             style={{
-                                backgroundColor: activeTab === 'preview' ? 'var(--claude-artifact-bg)' : 'transparent',
-                                color: activeTab === 'preview' ? 'var(--claude-artifact-text)' : 'var(--claude-artifact-text-secondary)'
+                                backgroundColor: activeTab === 'code' ? 'var(--claude-artifact-bg)' : 'transparent',
+                                color: activeTab === 'code' ? 'var(--claude-artifact-text)' : 'var(--claude-artifact-text-secondary)'
                             }}
                         >
-                            <Eye className="w-4 h-4" />
-                            Preview
+                            <Code2 className="w-4 h-4" />
+                            Code
                         </button>
-                    )}
-                </div>
-
-                <div className="flex items-center gap-2">
-                    {hasUnsavedChanges && (
-                        <>
+                        {canPreview && (
                             <button
-                                onClick={discardChanges}
-                                className="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-800 transition-colors"
+                                onClick={() => setActiveTab('preview')}
+                                className={clsx(
+                                    "flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors",
+                                    activeTab === 'preview'
+                                        ? "shadow-sm"
+                                        : "hover:bg-gray-100"
+                                )}
+                                style={{
+                                    backgroundColor: activeTab === 'preview' ? 'var(--claude-artifact-bg)' : 'transparent',
+                                    color: activeTab === 'preview' ? 'var(--claude-artifact-text)' : 'var(--claude-artifact-text-secondary)'
+                                }}
                             >
-                                Discard
+                                <Eye className="w-4 h-4" />
+                                Preview
                             </button>
-                            <button
-                                onClick={saveChanges}
-                                className="px-3 py-1.5 text-sm text-white rounded-lg transition-colors"
-                                style={{ backgroundColor: 'var(--claude-accent)' }}
-                            >
-                                Save
-                            </button>
-                        </>
-                    )}
+                        )}
+                    </div>
 
-                    <button
-                        onClick={copyToClipboard}
-                        className="flex items-center gap-2 px-3 py-1.5 text-sm border rounded-lg hover:bg-gray-50 transition-colors"
-                        style={{
-                            borderColor: 'var(--claude-border)',
-                            color: 'var(--claude-text-secondary)'
-                        }}
-                    >
-                        {copied ? (
+                    <div className="flex items-center gap-2">
+                        {hasUnsavedChanges && (
                             <>
-                                <Check className="w-4 h-4" />
-                                Copied
-                            </>
-                        ) : (
-                            <>
-                                <Copy className="w-4 h-4" />
-                                Copy
+                                <button
+                                    onClick={discardChanges}
+                                    className="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-800 transition-colors"
+                                >
+                                    Discard
+                                </button>
+                                <button
+                                    onClick={saveChanges}
+                                    className="px-3 py-1.5 text-sm text-white rounded-lg transition-colors"
+                                    style={{ backgroundColor: 'var(--claude-accent)' }}
+                                >
+                                    Save
+                                </button>
                             </>
                         )}
-                    </button>
 
-                    <button
-                        onClick={downloadFile}
-                        className="flex items-center gap-2 px-3 py-1.5 text-sm border rounded-lg hover:bg-gray-50 transition-colors"
-                        style={{
-                            borderColor: 'var(--claude-border)',
-                            color: 'var(--claude-text-secondary)'
-                        }}
-                    >
-                        <Download className="w-4 h-4" />
-                        Download
-                    </button>
+                        <button
+                            onClick={downloadAllFiles}
+                            className="flex items-center gap-2 px-3 py-1.5 text-sm border rounded-lg hover:bg-gray-50 transition-colors"
+                            style={{
+                                borderColor: 'var(--claude-accent)',
+                                color: 'white',
+                                backgroundColor: 'var(--claude-accent)'
+                            }}
+                        >
+                            <Download className="w-4 h-4" />
+                            Download All
+                        </button>
+                    </div>
                 </div>
             </div>
-        </div>
 
             {/* Content Area */}
             <div className="flex-1 overflow-hidden">
@@ -380,8 +359,29 @@ export default function ArtifactViewer({
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
                             transition={{ duration: 0.2 }}
-                            className="h-full"
+                            className="h-full relative"
                         >
+                            {/* Copy button positioned in top right corner */}
+                            <div className="absolute top-4 right-4 z-10">
+                                <button
+                                    onClick={copyToClipboard}
+                                    className="flex items-center gap-2 px-3 py-1.5 text-sm bg-gray-800/80 backdrop-blur-sm border border-gray-600 rounded-lg hover:bg-gray-700/80 transition-colors"
+                                    style={{ color: 'white' }}
+                                >
+                                    {copied ? (
+                                        <>
+                                            <Check className="w-4 h-4" />
+                                            Copied
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Copy className="w-4 h-4" />
+                                            Copy
+                                        </>
+                                    )}
+                                </button>
+                            </div>
+                            
                             <Editor
                                 height="100%"
                                 language={getEditorLanguage()}
@@ -411,20 +411,6 @@ export default function ArtifactViewer({
                             transition={{ duration: 0.2 }}
                             className="h-full flex flex-col"
                         >
-                            <div
-                                className="px-4 py-2 text-xs border-b"
-                                style={{
-                                    backgroundColor: 'var(--claude-code-bg)',
-                                    borderColor: 'var(--claude-border)',
-                                    color: 'var(--claude-text-muted)'
-                                }}
-                            >
-                                {allArtifacts.length > 1 ? (
-                                    `Live preview: ${allArtifacts.length} files integrated`
-                                ) : (
-                                    `Preview: ${selectedArtifact.filename}`
-                                )}
-                            </div>
                             <div className="flex-1">
                                 <iframe
                                     srcDoc={createCombinedPreview()}

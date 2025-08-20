@@ -2,7 +2,7 @@ import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
-import { User, Bot, Copy, Check, FileCode2, ExternalLink } from 'lucide-react';
+import { User, Bot, Copy, Check, FileCode2, ExternalLink, Star, Bookmark, ThumbsUp, ThumbsDown, RotateCcw } from 'lucide-react';
 import { clsx } from 'clsx';
 import { motion } from 'framer-motion';
 
@@ -49,21 +49,16 @@ export default function MessageList({
         }
     };
 
-
     const getMessageArtifacts = (messageIndex: number) => {
         if (!artifacts || artifacts.length === 0) return [];
 
         const message = messages[messageIndex];
         if (message.role !== 'assistant') return [];
 
-
         if (message.artifactIds && message.artifactIds.length > 0) {
             const messageArtifacts = artifacts.filter(artifact =>
                 message.artifactIds!.includes(artifact.id!)
             );
-
-
-
             return messageArtifacts;
         }
 
@@ -71,7 +66,7 @@ export default function MessageList({
     };
 
     if (messages.length === 0) {
-    return (
+        return (
             <div className="flex flex-col items-center justify-center h-full text-center px-6">
                 <div className="max-w-lg mx-auto">
                     <div
@@ -99,249 +94,124 @@ export default function MessageList({
                             border: `1px solid var(--claude-chat-border)`
                         }}
                     >
-                        <p
-                            className="text-sm mb-2 font-medium"
-                            style={{ color: 'var(--claude-chat-text)' }}
-                        >
-                            Try asking me to:
+                        <p className="text-sm" style={{ color: 'var(--claude-chat-text-secondary)' }}>
+                            <strong>Claude can make mistakes.</strong> Please double-check responses.
                         </p>
-                        <ul
-                            className="text-sm space-y-1"
-                            style={{ color: 'var(--claude-chat-text-secondary)' }}
-                        >
-                            <li>• Create a complete web application</li>
-                            <li>• Write and explain code in any language</li>
-                            <li>• Analyze data and create visualizations</li>
-                            <li>• Help with debugging and optimization</li>
-                        </ul>
                     </div>
-
-
-
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="flex flex-col">
-            {messages.map((message, index) => (
-                <div key={message.id} className="group">
-                    <div
-                        className="px-6 py-4"
-                        style={{
-                            backgroundColor: 'var(--claude-chat-bg)'
-                        }}
+        <div className="space-y-6">
+            {messages.map((message, index) => {
+                const messageArtifacts = getMessageArtifacts(index);
+                const hasCodeBlocks = message.text.includes('```');
+
+                return (
+                    <motion.div
+                        key={message.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.3 }}
+                        className="group"
                     >
-                                        <div className="max-w-4xl mx-auto flex gap-4">
-                            {/* Avatar */}
-                            <div className="flex-shrink-0">
-                                <div className={clsx(
-                                    "w-8 h-8 rounded-full flex items-center justify-center text-white font-medium text-sm",
-                                    message.role === 'user'
-                                        ? "bg-gray-600"
-                                        : "bg-orange-500"
-                                )}
-
+                        {message.role === 'user' ? (
+                            // User Message
+                            <div className="flex items-start gap-3">
+                                <div
+                                    className="w-8 h-8 rounded-full flex items-center justify-center text-white font-medium text-sm flex-shrink-0"
+                                    style={{ backgroundColor: '#404040' }}
                                 >
-                                    {message.role === 'user' && (
-                                        <User className="w-4 h-4" />
-                                    )}
+                                    WR
                                 </div>
-                            </div>
-
-                            {/* Message Content */}
-                            <div className="flex-1 min-w-0 relative">
-                                {message.role === 'user' ? (
+                                <div className="flex-1 min-w-0">
                                     <div
-                                        className="text-base leading-relaxed"
-                                        style={{ color: 'var(--claude-chat-text)' }}
-                                    >
-                                        {message.text}
-                                    </div>
-                                ) : (
-                                    <div
-                                        className="prose prose-claude max-w-none"
+                                        className="inline-block px-4 py-2 rounded-2xl"
                                         style={{
-                                            color: 'var(--claude-chat-text)',
-                                            fontSize: '15px',
-                                            lineHeight: '1.6'
+                                            backgroundColor: 'var(--claude-chat-surface)',
+                                            border: `1px solid var(--claude-chat-border)`
                                         }}
                                     >
+                                        <p className="text-sm" style={{ color: 'var(--claude-chat-text)' }}>
+                                            {message.text}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        ) : (
+                            // Assistant Message
+                            <div className="flex items-start gap-3">
+                                <div
+                                    className="w-8 h-8 rounded-xl flex items-center justify-center text-white font-bold text-sm flex-shrink-0"
+                                    style={{ backgroundColor: 'var(--claude-accent)' }}
+                                >
+                                    C
+                                </div>
+                                <div className="flex-1 min-w-0 space-y-4">
+                                    {/* Message Content */}
+                                    <div className="prose prose-claude max-w-none">
                                         <ReactMarkdown
                                             remarkPlugins={[remarkGfm]}
                                             rehypePlugins={[rehypeHighlight]}
                                             components={{
-                                                code: ({ inline, className, children, ...props }: any) => {
-                                                    const match = /language-(\w+)/.exec(className || '');
-                                                    const language = match ? match[1] : '';
-
-                                                    if (!inline && language) {
-                                                        return (
-                                                            <div className="relative my-4">
-                                                                <div
-                                                                    className="flex justify-between items-center px-4 py-2 rounded-t-lg text-sm"
-                                                                    style={{
-                                                                        backgroundColor: '#2d3748',
-                                                                        color: 'white'
-                                                                    }}
-                                                                >
-                                                                    <span className="font-mono text-gray-300">{language}</span>
-                                                                    <button
-                                                                        onClick={() => copyToClipboard(String(children), `${message.id}-${language}`)}
-                                                                        className="flex items-center gap-1 px-2 py-1 text-xs bg-gray-700 hover:bg-gray-600 rounded transition-colors"
-                                                                    >
-                                                                        {copiedId === `${message.id}-${language}` ? (
-                                                                            <>
-                                                                                <Check className="w-3 h-3" />
-                                                                                Copied
-                                                                            </>
-                                                                        ) : (
-                                                                            <>
-                                                                                <Copy className="w-3 h-3" />
-                                                                                Copy
-                                                                            </>
-                                                                        )}
-                                                                    </button>
-                                                                </div>
-                                                                <pre
-                                                                    className="p-4 rounded-b-lg overflow-x-auto font-mono text-sm"
-                                                                    style={{
-                                                                        backgroundColor: '#1a202c',
-                                                                        color: '#e2e8f0'
-                                                                    }}
-                                                                >
-                                                                    <code {...props}>{children}</code>
-                                                                </pre>
-                                                            </div>
-                                                        );
-                                                    }
-                                                    return (
-                                                        <code
-                                                            className="px-1.5 py-0.5 rounded font-mono text-sm"
-                                                            style={{
-                                                                backgroundColor: 'var(--claude-code-bg)',
-                                                                color: 'var(--claude-text-primary)'
-                                                            }}
-                                                            {...props}
-                                                        >
-                                                            {children}
-                                                        </code>
-                                                    );
-                                                },
-                                                p: ({ children }) => (
-                                                    <p
-                                                        className="mb-4 last:mb-0"
-                                                        style={{ color: 'var(--claude-text-primary)' }}
-                                                    >
-                                                        {children}
-                                                    </p>
-                                                ),
-                                                h1: ({ children }) => (
-                                                    <h1
-                                                        className="text-xl font-semibold mb-4 mt-6 first:mt-0"
-                                                        style={{ color: 'var(--claude-text-primary)' }}
-                                                    >
-                                                        {children}
-                                                    </h1>
-                                                ),
-                                                h2: ({ children }) => (
-                                                    <h2
-                                                        className="text-lg font-semibold mb-3 mt-5 first:mt-0"
-                                                        style={{ color: 'var(--claude-text-primary)' }}
-                                                    >
-                                                        {children}
-                                                    </h2>
-                                                ),
-                                                h3: ({ children }) => (
-                                                    <h3
-                                                        className="text-base font-semibold mb-2 mt-4 first:mt-0"
-                                                        style={{ color: 'var(--claude-text-primary)' }}
-                                                    >
-                                                        {children}
-                                                    </h3>
-                                                ),
-                                                ul: ({ children }) => (
-                                                    <ul
-                                                        className="list-disc list-inside mb-4 space-y-1"
-                                                        style={{ color: 'var(--claude-text-primary)' }}
-                                                    >
-                                                        {children}
-                                                    </ul>
-                                                ),
-                                                ol: ({ children }) => (
-                                                    <ol
-                                                        className="list-decimal list-inside mb-4 space-y-1"
-                                                        style={{ color: 'var(--claude-text-primary)' }}
-                                                    >
-                                                        {children}
-                                                    </ol>
-                                                ),
-                                                blockquote: ({ children }) => (
-                                                    <blockquote
-                                                        className="border-l-4 pl-4 my-4 italic"
+                                                pre: ({ children, ...props }) => (
+                                                    <div
+                                                        className="relative rounded-lg overflow-hidden my-4"
                                                         style={{
-                                                            borderColor: 'var(--claude-accent)',
-                                                            color: 'var(--claude-text-secondary)'
+                                                            backgroundColor: 'var(--claude-chat-surface)',
+                                                            border: `1px solid var(--claude-chat-border)`
                                                         }}
                                                     >
-                                                        {children}
-                                                    </blockquote>
-                                                ),
-                                                table: ({ children }) => (
-                                                    <div className="overflow-x-auto my-4">
-                                                        <table
-                                                            className="min-w-full divide-y"
-                                                            style={{ borderColor: 'var(--claude-border)' }}
+                                                        <div className="flex items-center justify-between px-4 py-2 border-b"
+                                                            style={{ borderColor: 'var(--claude-chat-border)' }}>
+                                                            <span className="text-sm font-medium" style={{ color: 'var(--claude-chat-text)' }}>
+                                                                {message.artifactTitle || 'Code'}
+                                                            </span>
+                                                            <button
+                                                                onClick={() => copyToClipboard(message.text, message.id)}
+                                                                className="p-1 rounded hover:bg-gray-700 transition-colors"
+                                                                style={{ color: 'var(--claude-chat-text-secondary)' }}
+                                                            >
+                                                                {copiedId === message.id ? (
+                                                                    <Check className="w-4 h-4" />
+                                                                ) : (
+                                                                    <Copy className="w-4 h-4" />
+                                                                )}
+                                                            </button>
+                                                        </div>
+                                                        <div
+                                                            className="p-4"
+                                                            style={{ backgroundColor: '#0d1117' }}
                                                         >
-                                                            {children}
-                                                        </table>
+                                                            <pre {...props} className="text-sm text-white font-mono">
+                                                                {children}
+                                                            </pre>
+                                                        </div>
                                                     </div>
                                                 ),
-                                                th: ({ children }) => (
-                                                    <th
-                                                        className="px-3 py-2 text-left text-sm font-medium"
-                                                        style={{
-                                                            backgroundColor: 'var(--claude-code-bg)',
-                                                            color: 'var(--claude-text-primary)',
-                                                            borderColor: 'var(--claude-border)'
-                                                        }}
-                                                    >
+                                                p: ({ children, ...props }) => (
+                                                    <p {...props} className="text-sm leading-relaxed" style={{ color: 'var(--claude-chat-text)' }}>
                                                         {children}
-                                                    </th>
-                                                ),
-                                                td: ({ children }) => (
-                                                    <td
-                                                        className="px-3 py-2 text-sm border-b"
-                                                        style={{
-                                                            color: 'var(--claude-text-primary)',
-                                                            borderColor: 'var(--claude-border)'
-                                                        }}
-                                                    >
-                                                        {children}
-                                                    </td>
-                                                ),
+                                                    </p>
+                                                )
                                             }}
                                         >
                                             {message.displayText || message.text}
                                         </ReactMarkdown>
                                     </div>
-                                )}
 
-                                {/* Interactive Artifacts */}
-                                {message.role === 'assistant' && (() => {
-                                    const messageArtifacts = getMessageArtifacts(index);
-                                    if (messageArtifacts.length === 0) return null;
-
-                                    return (
+                                    {/* Interactive Artifact Button */}
+                                    {message.role === 'assistant' && messageArtifacts.length > 0 && (
                                         <div className="mt-4">
                                             <motion.button
                                                 onClick={() => onSelectMessage?.(message.id)}
                                                 className={clsx(
                                                     "flex items-center gap-3 w-full p-3 rounded-lg border transition-all duration-200 text-left",
                                                     selectedMessageId === message.id
-                                                        ? "bg-gray-700 border-gray-600 shadow-sm"
-                                                        : "bg-gray-800 border-gray-700 hover:border-gray-600 hover:shadow-sm"
+                                                        ? "bg-orange-900/20 border-orange-500/30 shadow-sm"
+                                                        : "bg-gray-800/50 border-gray-600 hover:border-gray-500 hover:bg-gray-800/70"
                                                 )}
                                                 whileHover={{ scale: 1.01 }}
                                                 whileTap={{ scale: 0.99 }}
@@ -356,9 +226,7 @@ export default function MessageList({
                                                 </div>
                                                 <div className="flex-1 min-w-0">
                                                     <div className="flex items-center gap-2">
-                                                        <h4
-                                                            className="font-medium text-sm truncate text-white"
-                                                        >
+                                                        <h4 className="font-medium text-sm truncate" style={{ color: 'var(--claude-chat-text)' }}>
                                                             {message.artifactTitle || (
                                                                 messageArtifacts.length === 1
                                                                     ? messageArtifacts[0].filename
@@ -367,41 +235,52 @@ export default function MessageList({
                                                         </h4>
                                                     </div>
                                                     <div className="flex items-center gap-2 mt-1">
-                                                        <span
-                                                            className="text-xs text-gray-400"
-                                                        >
+                                                        <span className="text-xs" style={{ color: 'var(--claude-chat-text-secondary)' }}>
                                                             Interactive Artifact • {messageArtifacts.length} file{messageArtifacts.length !== 1 ? 's' : ''}
                                                         </span>
                                                     </div>
                                                 </div>
                                                 <div className="flex-shrink-0">
-                                                                                                            <ExternalLink className="w-4 h-4 text-gray-500" />
+                                                    <ExternalLink className="w-4 h-4" style={{ color: 'var(--claude-chat-text-secondary)' }} />
                                                 </div>
                                             </motion.button>
-
                                         </div>
-                                    );
-                                })()}
+                                    )}
 
-                                {/* Copy button for assistant messages */}
-                                {message.role === 'assistant' && (
-                                    <button
-                                        onClick={() => copyToClipboard(message.text, message.id)}
-                                        className="absolute top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-lg hover:bg-gray-100"
-                                        title="Copy message"
-                                    >
-                                        {copiedId === message.id ? (
-                                            <Check className="w-4 h-4 text-green-600" />
-                                        ) : (
-                                            <Copy className="w-4 h-4 text-gray-500" />
-                                        )}
-                                    </button>
-                                )}
+                                    {/* Message Actions */}
+                                    <div className="flex items-center gap-4 pt-2">
+                                        <div className="flex items-center gap-1">
+                                            <Star className="w-4 h-4" style={{ color: 'var(--claude-accent)' }} />
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <button className="p-1 rounded hover:bg-gray-700 transition-colors" style={{ color: 'var(--claude-chat-text-secondary)' }}>
+                                                <Bookmark className="w-4 h-4" />
+                                            </button>
+                                            <button className="p-1 rounded hover:bg-gray-700 transition-colors" style={{ color: 'var(--claude-chat-text-secondary)' }}>
+                                                <ThumbsUp className="w-4 h-4" />
+                                            </button>
+                                            <button className="p-1 rounded hover:bg-gray-700 transition-colors" style={{ color: 'var(--claude-chat-text-secondary)' }}>
+                                                <ThumbsDown className="w-4 h-4" />
+                                            </button>
+                                        </div>
+                                        <div className="flex items-center gap-1">
+                                            <button className="flex items-center gap-1 text-sm hover:bg-gray-700 px-2 py-1 rounded transition-colors" style={{ color: 'var(--claude-chat-text-secondary)' }}>
+                                                <span>Retry</span>
+                                                <RotateCcw className="w-3 h-3" />
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {/* Disclaimer */}
+                                    <p className="text-xs" style={{ color: 'var(--claude-chat-text-muted)' }}>
+                                        Claude can make mistakes. Please double-check responses.
+                                    </p>
+                                </div>
                             </div>
-                    </div>
-                    </div>
-                </div>
-            ))}
+                        )}
+                    </motion.div>
+                );
+            })}
         </div>
     );
 }

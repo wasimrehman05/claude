@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Square, Loader2 } from 'lucide-react';
+import { Send, Square, Loader2, Plus, Link } from 'lucide-react';
 import { clsx } from 'clsx';
 
 interface ChatInputProps {
@@ -14,26 +14,21 @@ export default function ChatInput({ onSend, isSending = false, onStop }: ChatInp
     const [isClient, setIsClient] = useState(false);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-
     useEffect(() => {
         setIsClient(true);
     }, []);
 
-
     useEffect(() => {
         if (textareaRef.current) {
-
             textareaRef.current.style.height = 'auto';
             const scrollHeight = textareaRef.current.scrollHeight;
-            const lineHeight = 24; // line height in pixels
-            const minHeight = lineHeight; // minimum 1 row
-            const maxHeight = lineHeight * 6; // maximum 6 rows
+            const lineHeight = 24;
+            const minHeight = lineHeight;
+            const maxHeight = lineHeight * 6;
             
-
             const newHeight = Math.min(Math.max(scrollHeight, minHeight), maxHeight);
             textareaRef.current.style.height = `${newHeight}px`;
             
-
             const newRows = Math.ceil(newHeight / lineHeight);
             setRows(newRows);
         }
@@ -55,14 +50,11 @@ export default function ChatInput({ onSend, isSending = false, onStop }: ChatInp
     const handleKeyDown = (e: React.KeyboardEvent) => {
         if (e.key === 'Enter') {
             if (e.shiftKey) {
-
                 return;
             } else if (e.ctrlKey || e.metaKey) {
-
                 e.preventDefault();
                 handleSubmit();
             } else {
-
                 if (isClient && window.innerWidth > 768) {
                     e.preventDefault();
                     handleSubmit();
@@ -82,119 +74,94 @@ export default function ChatInput({ onSend, isSending = false, onStop }: ChatInp
 
     return (
         <div 
-            className="flex-shrink-0 px-6 py-4"
+            className="flex-shrink-0 px-4 py-4"
             style={{ 
                 backgroundColor: 'var(--claude-chat-bg)',
                 borderTop: `1px solid var(--claude-chat-border)`
             }}
         >
-            <div className="relative">
-                {/* Input container */}
-                <div 
-                    className="relative flex items-end rounded-2xl transition-all duration-200"
-                    style={{ 
-                        backgroundColor: 'var(--claude-chat-surface)',
-                        border: `1px solid var(--claude-chat-border)`,
-                        boxShadow: 'var(--claude-shadow)',
-                    }}
-                >
-                    <textarea
-                        ref={textareaRef}
-                        value={value}
-                        onChange={(e) => setValue(e.target.value)}
-                        onKeyDown={handleKeyDown}
-                        placeholder="Message Claude..."
-                        className={clsx(
-                            "flex-1 resize-none border-0 bg-transparent focus:ring-0 focus:outline-none scrollbar-thin",
-                            "text-base placeholder:text-gray-400 leading-6"
-                        )}
+            <div className="max-w-4xl mx-auto">
+                <div className="relative">
+                    {/* Input container */}
+                    <div 
+                        className="relative flex items-end rounded-2xl transition-all duration-200"
                         style={{ 
-                            color: 'var(--claude-chat-text)',
-                            height: '24px',
-                            lineHeight: '24px',
-                            overflow: 'hidden',
-                            padding: '16px 10px 16px 10px',
+                            backgroundColor: 'var(--claude-chat-surface)',
+                            border: `1px solid var(--claude-chat-border)`,
+                            boxShadow: 'var(--claude-shadow)',
                         }}
-                        rows={rows}
-                        disabled={isSending}
-                    />
-                    
-                    {/* Send/Stop button */}
-                    <div className="flex items-end p-3">
-                        {showStop ? (
+                    >
+                        {/* Left action buttons */}
+                        <div className="flex items-center gap-1 p-3">
                             <button
-                                onClick={handleStop}
-                                className="flex items-center justify-center w-8 h-8 rounded-lg bg-gray-200 text-gray-600 hover:bg-gray-300 transition-colors"
-                                title="Stop generation"
+                                className="p-1.5 rounded-lg hover:bg-gray-700 transition-colors"
+                                style={{ color: 'var(--claude-chat-text-secondary)' }}
+                                title="Add attachment"
                             >
-                                <Square className="w-4 h-4" />
+                                <Plus className="w-4 h-4" />
                             </button>
-                        ) : (
                             <button
-                                onClick={handleSubmit}
-                                disabled={!canSend}
-                                className={clsx(
-                                    "flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-200",
-                                    canSend
-                                        ? "text-white hover:scale-105"
-                                        : "bg-gray-200 text-gray-400 cursor-not-allowed"
-                                )}
-                                style={{
-                                    backgroundColor: canSend ? 'var(--claude-accent)' : undefined
+                                className="p-1.5 rounded-lg hover:bg-gray-700 transition-colors"
+                                style={{ color: 'var(--claude-chat-text-secondary)' }}
+                                title="Add link"
+                            >
+                                <Link className="w-4 h-4" />
+                            </button>
+                        </div>
+
+                        {/* Textarea */}
+                        <div className="flex-1 min-w-0">
+                            <textarea
+                                ref={textareaRef}
+                                value={value}
+                                onChange={(e) => setValue(e.target.value)}
+                                onKeyDown={handleKeyDown}
+                                placeholder="Reply to Claude..."
+                                className="w-full resize-none bg-transparent outline-none text-sm leading-6 py-3 pr-4"
+                                style={{ 
+                                    color: 'var(--claude-chat-text)',
+                                    minHeight: '24px',
+                                    maxHeight: '144px'
                                 }}
-                                title={canSend ? "Send message" : "Type a message to send"}
+                                rows={1}
+                            />
+                        </div>
+
+                        {/* Right side - Model selector and send button */}
+                        <div className="flex items-center gap-2 p-3">
+                            {/* Model selector */}
+                            <button
+                                className="flex items-center gap-1 text-sm hover:bg-gray-700 px-2 py-1 rounded transition-colors"
+                                style={{ color: 'var(--claude-chat-text)' }}
+                            >
+                                <span>Claude Sonnet 4</span>
+                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </button>
+
+                            {/* Send/Stop button */}
+                            <button
+                                onClick={showStop ? handleStop : handleSubmit}
+                                disabled={!canSend && !showStop}
+                                className={clsx(
+                                    "p-2 rounded-lg transition-all duration-200 flex items-center justify-center",
+                                    canSend || showStop
+                                        ? "hover:scale-105"
+                                        : "opacity-50 cursor-not-allowed"
+                                )}
+                                style={{ 
+                                    backgroundColor: canSend || showStop ? 'var(--claude-accent)' : '#404040',
+                                    color: 'white'
+                                }}
                             >
                                 {isSending ? (
-                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                    <Square className="w-4 h-4" />
                                 ) : (
                                     <Send className="w-4 h-4" />
                                 )}
                             </button>
-                        )}
-                    </div>
-                </div>
-
-                {/* Keyboard shortcuts hint */}
-                <div className="flex justify-between items-center mt-3 px-2">
-                    <div 
-                        className="text-xs"
-                        style={{ color: 'var(--claude-chat-text-muted)' }}
-                    >
-                        {isClient && window.innerWidth > 768 ? (
-                            <>
-                                <kbd 
-                                    className="px-1.5 py-0.5 text-xs font-medium rounded border"
-                                    style={{ 
-                                        color: 'var(--claude-chat-text-secondary)',
-                                        backgroundColor: 'var(--claude-chat-surface)',
-                                        borderColor: 'var(--claude-chat-border)'
-                                    }}
-                                >
-                                    Enter
-                                </kbd>
-                                {' '}to send, {' '}
-                                <kbd 
-                                    className="px-1.5 py-0.5 text-xs font-medium rounded border"
-                                    style={{ 
-                                        color: 'var(--claude-chat-text-secondary)',
-                                        backgroundColor: 'var(--claude-chat-surface)',
-                                        borderColor: 'var(--claude-chat-border)'
-                                    }}
-                                >
-                                    Shift + Enter
-                                </kbd>
-                                {' '}for new line
-                            </>
-                        ) : (
-                            'Enter to send, Shift+Enter for new line'
-                        )}
-                    </div>
-                    
-                    <div 
-                        className="text-xs"
-                        style={{ color: 'var(--claude-chat-text-muted)' }}
-                    >
-                        {value.length}
+                        </div>
                     </div>
                 </div>
             </div>
