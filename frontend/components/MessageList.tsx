@@ -71,7 +71,7 @@ export default function MessageList({
     };
 
     if (messages.length === 0) {
-        return (
+    return (
             <div className="flex flex-col items-center justify-center h-full text-center px-6">
                 <div className="max-w-lg mx-auto">
                     <div
@@ -405,7 +405,7 @@ export default function MessageList({
                                     </button>
                                 )}
                             </div>
-                        </div>
+                    </div>
                     </div>
                 </div>
             ))}
