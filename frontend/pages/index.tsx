@@ -45,7 +45,7 @@ export default function Home() {
         if (artifacts.length > 0 && !artifactViewerOpen && !selectedMessageId) {
 
             const firstArtifact = artifacts[0];
-            const owningMessage = messages.find(msg => 
+            const owningMessage = messages.find(msg =>
                 msg.artifactIds?.includes(firstArtifact.id!)
             );
             if (owningMessage) {
@@ -57,7 +57,7 @@ export default function Home() {
 
     const startStream = useCallback(async (sid: string) => {
         const streamUrl = `${API_BASE}/api/v1/stream/${sid}`;
-        
+
         try {
             const es = new EventSource(streamUrl);
             eventsRef.current = es;
@@ -65,9 +65,9 @@ export default function Home() {
 
 
             const assistantMessageId = `msg-${Date.now()}`;
-            let assistantMessage = { 
-                id: assistantMessageId, 
-                role: 'assistant' as const, 
+            let assistantMessage = {
+                id: assistantMessageId,
+                role: 'assistant' as const,
                 text: '',
                 displayText: '',
                 artifactIds: []
@@ -78,13 +78,13 @@ export default function Home() {
                 try {
                     const d = JSON.parse(ev.data);
                     const delta = d.delta;
-                    setMessages(prev => 
+                    setMessages(prev =>
                         prev.map(msg => {
                             if (msg.id === assistantMessageId) {
                                 const fullText = msg.text + delta;
                                 const { displayText, hasCodeBlocks } = separateTextFromCode(fullText);
-                                return { 
-                                    ...msg, 
+                                return {
+                                    ...msg,
                                     text: fullText,
                                     displayText: displayText
                                 };
@@ -92,8 +92,8 @@ export default function Home() {
                             return msg;
                         })
                     );
-                } catch (e) { 
-                    console.error('Error parsing delta:', e); 
+                } catch (e) {
+                    console.error('Error parsing delta:', e);
                 }
             });
 
@@ -102,10 +102,10 @@ export default function Home() {
                     const d = JSON.parse(ev.data);
                     const artifact: Artifact = d.artifact;
 
-                    
+
 
                     const artifactId = `artifact-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-                    
+
 
                     setArtifacts(prev => {
                         const newArtifact = {
@@ -116,9 +116,9 @@ export default function Home() {
                         };
                         return [...prev, newArtifact];
                     });
-                    
 
-                    setMessages(prev => 
+
+                    setMessages(prev =>
                         prev.map(msg => {
                             if (msg.id === assistantMessageId) {
                                 const currentArtifactIds = msg.artifactIds || [];
@@ -132,8 +132,8 @@ export default function Home() {
                             return msg;
                         })
                     );
-                } catch (e) { 
-                    console.error('Error parsing artifact:', e); 
+                } catch (e) {
+                    console.error('Error parsing artifact:', e);
                 }
             });
 
@@ -141,23 +141,23 @@ export default function Home() {
                 setIsStreaming(false);
                 es.close();
                 eventsRef.current = null;
-                
+
 
                 setArtifacts(currentArtifacts => {
-                    setMessages(prev => 
+                    setMessages(prev =>
                         prev.map(msg => {
                             if (msg.id === assistantMessageId && msg.artifactIds && msg.artifactIds.length > 0) {
 
                                 const extractedTitle = extractArtifactTitle(msg.text);
-                                
+
 
                                 const artifactTitle = extractedTitle || (() => {
-                                    const messageArtifacts = currentArtifacts.filter(a => 
+                                    const messageArtifacts = currentArtifacts.filter(a =>
                                         msg.artifactIds!.includes(a.id!)
                                     );
                                     return generateFallbackTitle(messageArtifacts);
                                 })();
-                                
+
                                 return {
                                     ...msg,
                                     artifactTitle
@@ -197,10 +197,10 @@ export default function Home() {
             setError(null);
 
 
-            const userMessage: Message = { 
-                id: `msg-${Date.now()}`, 
-                role: 'user', 
-                text: messageText 
+            const userMessage: Message = {
+                id: `msg-${Date.now()}`,
+                role: 'user',
+                text: messageText
             };
             setMessages(prev => [...prev, userMessage]);
 
@@ -231,9 +231,9 @@ export default function Home() {
     }, [sessionId, startStream]);
 
     const handleUpdateArtifact = useCallback((artifactId: string, newContent: string) => {
-        setArtifacts(prev => 
-            prev.map((artifact) => 
-                artifact.id === artifactId 
+        setArtifacts(prev =>
+            prev.map((artifact) =>
+                artifact.id === artifactId
                     ? { ...artifact, content: newContent }
                     : artifact
             )
@@ -246,20 +246,20 @@ export default function Home() {
     }, []);
 
 
-    const selectedMessage = selectedMessageId 
-        ? messages.find(msg => msg.id === selectedMessageId) 
+    const selectedMessage = selectedMessageId
+        ? messages.find(msg => msg.id === selectedMessageId)
         : null;
 
 
     const getMessageArtifacts = useCallback((): Artifact[] => {
         if (!selectedMessageId || !selectedMessage) return [];
-        
+
         if (!selectedMessage.artifactIds || selectedMessage.artifactIds.length === 0) {
             return [];
         }
-        
 
-        return artifacts.filter(artifact => 
+
+        return artifacts.filter(artifact =>
             artifact.id && selectedMessage.artifactIds!.includes(artifact.id)
         );
     }, [selectedMessageId, selectedMessage, artifacts]);
@@ -276,32 +276,30 @@ export default function Home() {
                 <link rel="icon" href="/favicon.ico" />
             </Head>
 
-            <div className="h-screen flex" style={{ backgroundColor: 'var(--claude-chat-bg)' }}>
-                {/* Left Chat Panel - Dark Theme */}
+            <div className="h-screen flex" style={{ backgroundColor: 'var(--claude-chat-bg)', width: '100vw' }}>
+                                {/* Left Chat Panel - Dark Theme */}
                 <div className={clsx(
-                    "flex flex-col transition-all duration-300 border-r",
+                    "flex flex-col transition-all duration-300",
                     artifactViewerOpen ? "w-3/5" : "w-full"
                 )}
                 style={{ 
-                    backgroundColor: 'var(--claude-chat-bg)',
-                    borderColor: 'var(--claude-chat-border)'
+                    backgroundColor: 'var(--claude-chat-bg)'
                 }}>
                     {/* Chat Header */}
-                    <header 
+                                        <header 
                         className="flex-shrink-0 px-6 py-4"
                         style={{ 
-                            backgroundColor: 'var(--claude-chat-bg)',
-                            borderBottom: `1px solid var(--claude-chat-border)`
+                            backgroundColor: 'var(--claude-chat-bg)'
                         }}
                     >
                         <div className="flex items-center gap-3">
-                            <div 
+                            <div
                                 className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-sm"
                                 style={{ backgroundColor: 'var(--claude-accent)' }}
                             >
                                 C
                             </div>
-                            <h1 
+                            <h1
                                 className="text-lg font-medium tracking-tight"
                                 style={{ color: 'var(--claude-chat-text)' }}
                             >
@@ -316,7 +314,7 @@ export default function Home() {
                             <div className="max-w-4xl mx-auto flex items-center gap-2 text-red-800 text-sm">
                                 <span className="font-medium">Error:</span>
                                 <span>{error}</span>
-                                <button 
+                                <button
                                     onClick={() => setError(null)}
                                     className="ml-auto text-red-600 hover:text-red-800 text-lg"
                                 >
@@ -329,7 +327,7 @@ export default function Home() {
                     {/* Chat Messages */}
                     <div className="flex-1 overflow-y-auto scrollbar-thin">
                         <div className="min-h-full">
-                            <MessageList 
+                            <MessageList
                                 messages={messages}
                                 artifacts={artifacts}
                                 onSelectMessage={handleSelectMessage}
@@ -348,8 +346,8 @@ export default function Home() {
                     </div>
 
                     {/* Chat Input */}
-                    <ChatInput 
-                        onSend={sendMessage} 
+                    <ChatInput
+                        onSend={sendMessage}
                         isSending={isStreaming}
                         onStop={stopStream}
                     />
@@ -367,20 +365,20 @@ export default function Home() {
                             style={{ backgroundColor: 'var(--claude-artifact-bg)' }}
                         >
                             {/* Artifact Header */}
-                            <div 
+                            <div
                                 className="flex items-center justify-between px-6 py-4 border-b"
-                                style={{ 
+                                style={{
                                     backgroundColor: 'var(--claude-artifact-header-bg)',
                                     borderColor: 'var(--claude-artifact-border)'
                                 }}
                             >
                                 <div className="flex items-center gap-3">
-                                   
+
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <button
                                         className="flex items-center gap-2 px-3 py-1.5 text-sm rounded-lg border hover:bg-gray-50 transition-colors"
-                                        style={{ 
+                                        style={{
                                             borderColor: 'var(--claude-artifact-border)',
                                             color: 'var(--claude-artifact-text-secondary)'
                                         }}
@@ -444,7 +442,7 @@ export default function Home() {
                                     title={selectedMessage?.artifactTitle}
                                     onClose={() => setArtifactViewerOpen(false)}
                                     onUpdateArtifact={handleUpdateArtifact}
-                                    onSelectArtifact={() => {}}
+                                    onSelectArtifact={() => { }}
                                 />
                             </motion.div>
                         </motion.div>

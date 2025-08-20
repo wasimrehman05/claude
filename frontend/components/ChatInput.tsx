@@ -106,7 +106,7 @@ export default function ChatInput({ onSend, isSending = false, onStop }: ChatInp
                         placeholder="Message Claude..."
                         className={clsx(
                             "flex-1 resize-none border-0 bg-transparent focus:ring-0 focus:outline-none scrollbar-thin",
-                            "text-base placeholder:text-gray-500 leading-6"
+                            "text-base placeholder:text-gray-400 leading-6"
                         )}
                         style={{ 
                             color: 'var(--claude-chat-text)',

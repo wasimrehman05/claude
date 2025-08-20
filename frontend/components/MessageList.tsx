@@ -128,26 +128,19 @@ export default function MessageList({
             {messages.map((message, index) => (
                 <div key={message.id} className="group">
                     <div
-                        className="px-6 py-6 border-b"
+                        className="px-6 py-4"
                         style={{
-                            borderColor: 'var(--claude-chat-border)'
+                            backgroundColor: 'var(--claude-chat-bg)'
                         }}
                     >
-                        <div className="max-w-5xl mx-auto flex gap-4"
-                            style={{
-                                backgroundColor: message.role === 'user'
-                                    ? 'var(--claude-chat-surface)'
-                                    : 'var(--claude-chat-bg)',
-                                // borderRadius:  '10px 10px 10px 10px'
-                            }}
-                        >
+                                        <div className="max-w-4xl mx-auto flex gap-4">
                             {/* Avatar */}
                             <div className="flex-shrink-0">
                                 <div className={clsx(
-                                    "w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-sm",
+                                    "w-8 h-8 rounded-full flex items-center justify-center text-white font-medium text-sm",
                                     message.role === 'user'
-                                        ? "bg-blue-500"
-                                        : ""
+                                        ? "bg-gray-600"
+                                        : "bg-orange-500"
                                 )}
 
                                 >
@@ -347,8 +340,8 @@ export default function MessageList({
                                                 className={clsx(
                                                     "flex items-center gap-3 w-full p-3 rounded-lg border transition-all duration-200 text-left",
                                                     selectedMessageId === message.id
-                                                        ? "bg-orange-50 border-orange-200 shadow-sm"
-                                                        : "bg-white border-gray-200 hover:border-gray-300 hover:shadow-sm"
+                                                        ? "bg-gray-700 border-gray-600 shadow-sm"
+                                                        : "bg-gray-800 border-gray-700 hover:border-gray-600 hover:shadow-sm"
                                                 )}
                                                 whileHover={{ scale: 1.01 }}
                                                 whileTap={{ scale: 0.99 }}
@@ -364,7 +357,7 @@ export default function MessageList({
                                                 <div className="flex-1 min-w-0">
                                                     <div className="flex items-center gap-2">
                                                         <h4
-                                                            className="font-medium text-sm truncate text-gray-800"
+                                                            className="font-medium text-sm truncate text-white"
                                                         >
                                                             {message.artifactTitle || (
                                                                 messageArtifacts.length === 1
@@ -375,14 +368,14 @@ export default function MessageList({
                                                     </div>
                                                     <div className="flex items-center gap-2 mt-1">
                                                         <span
-                                                            className="text-xs text-gray-500"
+                                                            className="text-xs text-gray-400"
                                                         >
                                                             Interactive Artifact • {messageArtifacts.length} file{messageArtifacts.length !== 1 ? 's' : ''}
                                                         </span>
                                                     </div>
                                                 </div>
                                                 <div className="flex-shrink-0">
-                                                    <ExternalLink className="w-4 h-4 text-gray-400" />
+                                                                                                            <ExternalLink className="w-4 h-4 text-gray-500" />
                                                 </div>
                                             </motion.button>
 

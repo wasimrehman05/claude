@@ -6,33 +6,32 @@
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap');
 
 :root {
-  /* Claude.ai exact colors from the image */
-  /* --claude-chat-bg: #1a1a1a; */
-  --claude-chat-bg: #262624;
-  --claude-chat-surface: #171716;
-  --claude-chat-border: #3a3a3a;
+  /* Claude.ai exact dark theme colors from the image */
+  --claude-chat-bg: #1a1a1a;
+  --claude-chat-surface: #2d2d2d;
+  --claude-chat-border: #404040;
   --claude-chat-text: #ffffff;
-  --claude-chat-text-secondary: #a0a0a0;
-  --claude-chat-text-muted: #666666;
+  --claude-chat-text-secondary: #b3b3b3;
+  --claude-chat-text-muted: #808080;
   
-  --claude-artifact-bg: #ffffff;
-  --claude-artifact-header-bg: #262624;
-  --claude-artifact-surface: #262624;
-  --claude-artifact-border: #e5e7eb;
-  --claude-artifact-text: #1f2937;
-  --claude-artifact-text-secondary: #6b7280;
-  --claude-artifact-text-muted: #9ca3af;
+  --claude-artifact-bg: #2d2d2d;
+  --claude-artifact-header-bg: #333333;
+  --claude-artifact-surface: #2d2d2d;
+  --claude-artifact-border: #404040;
+  --claude-artifact-text: #ffffff;
+  --claude-artifact-text-secondary: #b3b3b3;
+  --claude-artifact-text-muted: #808080;
   
-  --claude-accent: #f97316;
-  --claude-accent-hover: #ea580c;
+  --claude-accent: #ff6b35;
+  --claude-accent-hover: #e55a2b;
   --claude-blue: #3b82f6;
   --claude-green: #10b981;
   --claude-purple: #8b5cf6;
   --claude-purple-light: #a78bfa;
   
-  --claude-shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --claude-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
-  --claude-shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --claude-shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+  --claude-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.4), 0 1px 2px -1px rgb(0 0 0 / 0.4);
+  --claude-shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.4), 0 4px 6px -4px rgb(0 0 0 / 0.4);
 }
 
 html,
