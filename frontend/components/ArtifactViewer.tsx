@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Editor } from '@monaco-editor/react';
-import { X, Code2, Eye, Download, Copy, Check, ChevronDown, ChevronUp, FileCode2 } from 'lucide-react';
+import { X, Code2, Eye, Download, Copy, Check, ChevronDown, FileCode2 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { motion, AnimatePresence } from 'framer-motion';
 import JSZip from 'jszip';
@@ -43,17 +43,11 @@ export default function ArtifactViewer({
         return hasHtml ? 'preview' : 'code';
     });
     const [copied, setCopied] = useState(false);
-    const [editedContent, setEditedContent] = useState<string>('');
-    const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
     const [artifactListOpen, setArtifactListOpen] = useState(false);
 
     useEffect(() => {
         setSelectedArtifact(artifact);
-        setEditedContent('');
-        setHasUnsavedChanges(false);
     }, [artifact]);
-
-    const currentContent = hasUnsavedChanges ? editedContent : selectedArtifact.content;
 
     const hasHtmlArtifact = allArtifacts.some(a =>
         a.language?.toLowerCase() === 'html' ||
@@ -63,128 +57,92 @@ export default function ArtifactViewer({
     );
     const canPreview = hasHtmlArtifact;
 
-    const getEditorLanguage = () => {
-        const lang = selectedArtifact.language?.toLowerCase();
-        const fileExt = selectedArtifact.filename.split('.').pop()?.toLowerCase();
-
-        if (lang === 'javascript' || lang === 'js' || fileExt === 'js') return 'javascript';
-        if (lang === 'typescript' || lang === 'ts' || fileExt === 'ts') return 'typescript';
-        if (lang === 'html' || fileExt === 'html') return 'html';
-        if (lang === 'css' || fileExt === 'css') return 'css';
-        if (lang === 'python' || lang === 'py' || fileExt === 'py') return 'python';
-        if (lang === 'json' || fileExt === 'json') return 'json';
-        if (lang === 'xml' || fileExt === 'xml') return 'xml';
-        if (lang === 'sql' || fileExt === 'sql') return 'sql';
-
-        return 'plaintext';
-    };
-
-    const handleEditorChange = useCallback((value: string | undefined) => {
-        if (value !== undefined && value !== selectedArtifact.content) {
-            setEditedContent(value);
-            setHasUnsavedChanges(true);
-        }
-    }, [selectedArtifact.content]);
-
-    const saveChanges = useCallback(() => {
-        if (onUpdateArtifact && hasUnsavedChanges && selectedArtifact.id) {
-            onUpdateArtifact(selectedArtifact.id, editedContent);
-            setHasUnsavedChanges(false);
-        }
-    }, [onUpdateArtifact, hasUnsavedChanges, editedContent, selectedArtifact.id]);
-
-    const discardChanges = useCallback(() => {
-        setEditedContent('');
-        setHasUnsavedChanges(false);
-    }, []);
-
-    const copyToClipboard = useCallback(async () => {
+    const copyToClipboard = async () => {
+        if (!selectedArtifact) return;
+        
         try {
-            await navigator.clipboard.writeText(currentContent);
+            await navigator.clipboard.writeText(selectedArtifact.content);
             setCopied(true);
             setTimeout(() => setCopied(false), 2000);
         } catch (err) {
             console.error('Failed to copy text:', err);
         }
-    }, [currentContent]);
+    };
 
-    const downloadAllFiles = useCallback(async () => {
+    const downloadAllFiles = async () => {
         try {
             const zip = new JSZip();
 
-            // Add all artifacts to the zip
             allArtifacts.forEach(artifact => {
                 zip.file(artifact.filename, artifact.content);
             });
 
-            // Generate the zip file
             const zipBlob = await zip.generateAsync({ type: 'blob' });
 
-            // Create download link
             const url = URL.createObjectURL(zipBlob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `${title || 'project'}.zip`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'artifacts.zip';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
             URL.revokeObjectURL(url);
-        } catch (err) {
-            console.error('Failed to create zip file:', err);
+        } catch (error) {
+            console.error('Failed to download files:', error);
         }
-    }, [allArtifacts, title]);
+    };
 
-    const createCombinedPreview = useCallback(() => {
+    const createCombinedPreview = () => {
         const htmlArtifact = allArtifacts.find(a =>
             a.language?.toLowerCase() === 'html' ||
             a.filename.endsWith('.html') ||
-            a.content.includes('<html')
+            a.content.includes('<html') ||
+            a.content.includes('<!DOCTYPE')
         );
 
-        if (!htmlArtifact) return currentContent;
+        if (!htmlArtifact) return '';
 
         let htmlContent = htmlArtifact.content;
+
         const cssArtifacts = allArtifacts.filter(a =>
             a.language?.toLowerCase() === 'css' || a.filename.endsWith('.css')
         );
+
         const jsArtifacts = allArtifacts.filter(a =>
-            a.language?.toLowerCase() === 'javascript' ||
-            a.language?.toLowerCase() === 'js' ||
+            a.language?.toLowerCase() === 'javascript' || 
+            a.language?.toLowerCase() === 'js' || 
             a.filename.endsWith('.js')
         );
 
-        const viewportAndCss = cssArtifacts.length > 0
-            ? `  <meta name="viewport" content="width=device-width, initial-scale=1.0">\n  <style>\n${cssArtifacts.map(a => a.content).join('\n\n')}\n  </style>`
-            : `  <meta name="viewport" content="width=device-width, initial-scale=1.0">`;
-
-        if (htmlContent.includes('</head>')) {
-            htmlContent = htmlContent.replace('</head>', `${viewportAndCss}\n</head>`);
-        } else if (htmlContent.includes('<head>')) {
-            htmlContent = htmlContent.replace('<head>', `<head>\n${viewportAndCss}`);
-        } else {
-            const headTag = `<head>\n${viewportAndCss}\n</head>\n`;
-            if (htmlContent.includes('<html>')) {
-                htmlContent = htmlContent.replace('<html>', `<html>\n${headTag}`);
+        if (cssArtifacts.length > 0) {
+            const cssContent = cssArtifacts.map(a => a.content).join('\n');
+            if (htmlContent.includes('</head>')) {
+                htmlContent = htmlContent.replace('</head>', `<style>${cssContent}</style>\n</head>`);
+            } else if (htmlContent.includes('<head>')) {
+                htmlContent = htmlContent.replace('<head>', `<head>\n<style>${cssContent}</style>`);
             } else {
-                htmlContent = `<!DOCTYPE html>\n<html>\n${headTag}${htmlContent}\n</html>`;
+                htmlContent = htmlContent.replace('<body>', `<head>\n<style>${cssContent}</style>\n</head>\n<body>`);
             }
         }
 
         if (jsArtifacts.length > 0) {
-            const combinedJS = jsArtifacts.map(a => a.content).join('\n\n');
+            const jsContent = jsArtifacts.map(a => a.content).join('\n');
             if (htmlContent.includes('</body>')) {
-                htmlContent = htmlContent.replace('</body>', `  <script>\n${combinedJS}\n  </script>\n</body>`);
+                htmlContent = htmlContent.replace('</body>', `<script>${jsContent}</script>\n</body>`);
             } else {
-                htmlContent += `\n<script>\n${combinedJS}\n</script>`;
+                htmlContent = htmlContent + `\n<script>${jsContent}</script>`;
             }
         }
 
+        if (!htmlContent.includes('<meta name="viewport"')) {
+            htmlContent = htmlContent.replace('<head>', '<head>\n<meta name="viewport" content="width=device-width, initial-scale=1.0">');
+        }
+
         return htmlContent;
-    }, [allArtifacts, currentContent]);
+    };
 
     return (
         <div className="h-full flex flex-col" style={{ backgroundColor: 'var(--claude-chat-bg)' }}>
-            {/* Artifact Navigation */}
             <div className="flex items-center justify-between py-4 px-0 border-b" style={{ borderColor: 'var(--claude-chat-border)', backgroundColor: 'var(--claude-chat-surface)' }}>
                 <div className="flex items-center gap-3">
                     <button
@@ -210,7 +168,6 @@ export default function ArtifactViewer({
                 </button>
             </div>
 
-            {/* Collapsible File List */}
             <AnimatePresence>
                 {artifactListOpen && (
                     <motion.div
@@ -267,61 +224,6 @@ export default function ArtifactViewer({
                 )}
             </AnimatePresence>
 
-            {/* Header with Title and Tab Bar */}
-            {/* <div className="flex items-center justify-between p-4 border-b" style={{ borderColor: 'var(--claude-chat-border)', backgroundColor: 'var(--claude-chat-surface)' }}>
-                <div className="flex items-center gap-4">
-                    <h3 className="text-lg font-semibold" style={{ color: 'var(--claude-chat-text)' }}>
-                        {selectedArtifact?.filename || 'No file selected'}
-                    </h3>
-                </div>
-                <div className="flex items-center gap-2">
-                    <button
-                        onClick={downloadAllFiles}
-                        className="flex items-center gap-2 px-3 py-1.5 text-sm bg-gray-800/50 border border-gray-600 rounded-lg hover:bg-gray-700 transition-colors"
-                        style={{ color: 'white' }}
-                    >
-                        <Download className="w-4 h-4" />
-                        Download All
-                    </button>
-                </div>
-            </div> */}
-
-            {/* Tab Bar */}
-            {/* <div className="flex border-b" style={{ borderColor: 'var(--claude-chat-border)', backgroundColor: 'var(--claude-chat-bg)' }}>
-                <button
-                    onClick={() => setActiveTab('code')}
-                    className={clsx(
-                        "px-4 py-2 text-sm font-medium transition-colors",
-                        activeTab === 'code'
-                            ? "border-b-2 text-white"
-                            : "text-gray-400 hover:text-gray-300 hover:bg-gray-700"
-                    )}
-                    style={{
-                        borderColor: activeTab === 'code' ? 'var(--claude-accent)' : 'transparent',
-                        backgroundColor: activeTab === 'code' ? 'var(--claude-chat-surface)' : 'transparent'
-                    }}
-                >
-                    Code
-                </button>
-                {hasHtmlArtifact && (
-                    <button
-                        onClick={() => setActiveTab('preview')}
-                        className={clsx(
-                            "px-4 py-2 text-sm font-medium transition-colors",
-                            activeTab === 'preview'
-                                ? "border-b-2 text-white"
-                                : "text-gray-400 hover:text-gray-300 hover:bg-gray-700"
-                        )}
-                        style={{
-                            borderColor: activeTab === 'preview' ? 'var(--claude-accent)' : 'transparent',
-                            backgroundColor: activeTab === 'preview' ? 'var(--claude-chat-surface)' : 'transparent'
-                        }}
-                    >
-                        Preview
-                    </button>
-                )}
-            </div> */}
-
             <div className="flex items-center justify-between px-1 py-4">
                 <div
                     className="flex items-center gap-1 p-1 rounded-lg"
@@ -374,7 +276,6 @@ export default function ArtifactViewer({
                 </div>
             </div>
 
-            {/* Content Area */}
             <div className="flex-1 overflow-hidden" style={{ backgroundColor: 'var(--claude-chat-bg)' }}>
                 {activeTab === 'code' && selectedArtifact && (
                     <motion.div
@@ -383,7 +284,6 @@ export default function ArtifactViewer({
                         transition={{ duration: 0.2 }}
                         className="h-full relative"
                     >
-                        {/* Copy Button */}
                         <div className="absolute top-4 right-4 z-10">
                             <button
                                 onClick={copyToClipboard}
@@ -404,7 +304,6 @@ export default function ArtifactViewer({
                             </button>
                         </div>
 
-                        {/* Monaco Editor */}
                         <div className="h-full">
                             <Editor
                                 height="100%"

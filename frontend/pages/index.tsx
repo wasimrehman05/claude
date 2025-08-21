@@ -324,7 +324,7 @@ export default function Home() {
                                     />
                                 </svg>
                                 <h1 className="text-[36px] font-serif" style={{ color: '#F5F5F5' }}>
-                                    How's it going, Rehman?
+                                    Hi there! How can I help you?
                                 </h1>
                             </div>
 

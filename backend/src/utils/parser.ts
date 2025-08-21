@@ -1,4 +1,3 @@
-// parser for fenced code blocks (enhanced)
 export type Artifact = { 
     id?: string;
     filename: string; 
@@ -18,7 +17,6 @@ export function parseArtifactsFromText(text: string): Artifact[] {
         const lang = match[1] || undefined;
         const content = match[2].trim();
         
-        // Skip empty code blocks
         if (!content) continue;
         
         const filename = guessFilename(lang, i, content);
@@ -35,7 +33,6 @@ export function parseArtifactsFromText(text: string): Artifact[] {
 }
 
 function extractFilenameFromComment(content: string, language?: string): string | null {
-    // Look for filename hints in comments
     const patterns = [
         /\/\*\s*([^*\s]+\.(html?|css|js|jsx|ts|tsx|py|java|cpp|c|go|rs|rb|php))\s*\*\//i,
         /\/\/\s*([^\/\s]+\.(html?|css|js|jsx|ts|tsx|py|java|cpp|c|go|rs|rb|php))/i,
@@ -54,13 +51,11 @@ function extractFilenameFromComment(content: string, language?: string): string 
 }
 
 function guessFilename(lang: string | undefined, i: number, content: string): string {
-    // First, try to extract filename from comments
     const commentFilename = extractFilenameFromComment(content, lang);
     if (commentFilename) {
         return commentFilename;
     }
     
-    // If no language specified, try to detect from content
     if (!lang) {
         if (content.includes('<!DOCTYPE') || content.includes('<html')) {
             return i === 1 ? 'index.html' : `page-${i}.html`;
@@ -74,7 +69,6 @@ function guessFilename(lang: string | undefined, i: number, content: string): st
         return `file-${i}.txt`;
     }
     
-    // Use predefined mapping with better defaults
     const map: Record<string, string> = { 
         html: i === 1 ? 'index.html' : `page-${i}.html`,
         css: i === 1 ? 'styles.css' : `style-${i}.css`,

@@ -2,7 +2,7 @@ import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
-import { User, Bot, Copy, Check, FileCode2, ExternalLink, Star, Bookmark, ThumbsUp, ThumbsDown, RotateCcw } from 'lucide-react';
+import { Copy, Check, FileCode2, ExternalLink, ThumbsUp, ThumbsDown, User } from 'lucide-react';
 import { clsx } from 'clsx';
 import { motion } from 'framer-motion';
 
@@ -69,7 +69,6 @@ export default function MessageList({
         <div className="space-y-6">
             {messages.map((message, index) => {
                 const messageArtifacts = getMessageArtifacts(index);
-                const hasCodeBlocks = message.text.includes('```');
 
                 return (
                     <motion.div
@@ -80,7 +79,6 @@ export default function MessageList({
                         className="group"
                     >
                         {message.role === 'user' ? (
-                            // User Message
                             <div className="flex items-start gap-3">
                                 <div className="flex-1 min-w-0">
                                     <div
@@ -90,8 +88,8 @@ export default function MessageList({
                                         }}
                                     >
                                         <div className="flex items-center gap-2">
-                                            <span className="text-sm font-medium" style={{ backgroundColor: '#C2C0B6', borderRadius: '50%', padding: '4px 4px' }}>
-                                                WR
+                                            <span className="text-sm font-medium" style={{ backgroundColor: '#C2C0B6', color: '#000000', borderRadius: '50%', padding: '4px 4px' }}>
+                                                <User />
                                             </span>
                                             <span className="text-sm" style={{ color: '#ffffff' }}>
                                                 {message.text}
@@ -101,10 +99,8 @@ export default function MessageList({
                                 </div>
                             </div>
                         ) : (
-                            // Assistant Message
                             <div className="flex items-start gap-3">
                                 <div className="flex-1 min-w-0 space-y-3">
-                                    {/* Message Content */}
                                     <div className="prose prose-claude max-w-none" style={{ color: '#ffffff' }}>
                                         <ReactMarkdown
                                             remarkPlugins={[remarkGfm]}
@@ -211,7 +207,6 @@ export default function MessageList({
                                         </ReactMarkdown>
                                     </div>
 
-                                    {/* Interactive Artifact Button */}
                                     {message.role === 'assistant' && messageArtifacts.length > 0 && (
                                         <div className="mt-4">
                                             <motion.button
@@ -264,7 +259,6 @@ export default function MessageList({
             {
                 messages.length > 0 && (
                     <div className="flex flex-col justify-center items-end gap-1">
-                        {/* Message Actions */}
                         <div className="flex gap-3 pt-2">
                             <div className="flex items-center gap-2">
                                 <button className="p-1 rounded hover:bg-gray-700 transition-colors" style={{ color: '#a0a0a0' }}>
@@ -283,7 +277,6 @@ export default function MessageList({
                                 </button>
                             </div>
                         </div>
-                        {/* Disclaimer */}
                         <p className="text-xs" style={{ color: '#666666' }}>
                             Claude can make mistakes. Please double-check responses.
                         </p>

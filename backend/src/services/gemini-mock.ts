@@ -4,7 +4,6 @@
  */
 
 import { config } from 'dotenv';
-// Load environment variables first
 config();
 
 import { GoogleGenerativeAI } from '@google/generative-ai';
@@ -17,7 +16,6 @@ type StreamDelta = { type: 'delta', text: string };
 type StreamArtifact = { type: 'artifact', artifact: Artifact };
 type StreamItem = StreamDelta | StreamArtifact;
 
-// Initialize Gemini API
 const apiKey = process.env.GEMINI_API_KEY;
 
 if (!apiKey) {
@@ -25,7 +23,6 @@ if (!apiKey) {
 }
 const genAI = new GoogleGenerativeAI(apiKey);
 
-// System prompt for Claude-like behavior with artifact generation
 const SYSTEM_PROMPT = `You are Claude, an AI assistant created by Anthropic. You are helpful, harmless, and honest.
 
 When generating code, always wrap it in triple backticks with the appropriate language identifier. For web projects, create separate files:
@@ -69,13 +66,11 @@ export async function* startGeminiStream(
             systemInstruction: SYSTEM_PROMPT
         });
 
-        // Build conversation history
         const history = conversationHistory.map(msg => ({
             role: msg.role === 'assistant' ? 'model' : 'user',
             parts: [{ text: msg.content }]
         }));
 
-        // Start chat session with history
         const chat = model.startChat({
             history: history as any,
             generationConfig: {
@@ -88,12 +83,10 @@ export async function* startGeminiStream(
 
         logger.info('Starting Gemini stream for prompt', { promptLength: prompt.length });
 
-        // Send message and get streaming response
         const result = await chat.sendMessageStream(prompt);
 
         let fullResponse = '';
         
-        // Stream the response
         for await (const chunk of result.stream) {
             const chunkText = chunk.text();
             if (chunkText) {
@@ -102,10 +95,8 @@ export async function* startGeminiStream(
             }
         }
 
-        // Parse artifacts from the complete response
         const artifacts = parseArtifactsFromText(fullResponse);
         
-        // Emit each artifact
         for (const artifact of artifacts) {
             yield { type: 'artifact', artifact };
         }
@@ -121,7 +112,6 @@ export async function* startGeminiStream(
             stack: error instanceof Error ? error.stack : undefined
         });
         
-        // Yield error as delta
         const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
         yield { 
             type: 'delta', 
@@ -130,5 +120,4 @@ export async function* startGeminiStream(
     }
 }
 
-// Legacy export for backward compatibility
 export const startMockStream = startGeminiStream;

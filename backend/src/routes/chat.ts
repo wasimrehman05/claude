@@ -1,19 +1,15 @@
 import { config } from 'dotenv';
-// Load environment variables first
 config();
 
 import express, { Request, Response } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import { startGeminiStream } from '../services/gemini-mock';
-import { parseArtifactsFromText, Artifact } from '../utils/parser';
+import { Artifact } from '../utils/parser';
 import pino from 'pino';
 
 const router = express.Router();
 const logger = pino({ level: process.env.LOG_LEVEL || 'info' });
 
-/**
- * Enhanced in-memory session store with metadata
- */
 interface ChatMessage {
     role: 'user' | 'assistant' | 'system';
     content: string;
@@ -30,9 +26,8 @@ interface ChatSession {
 
 const sessionStore = new Map<string, ChatSession>();
 
-// Clean up old sessions periodically (24 hours)
-const SESSION_CLEANUP_INTERVAL = 24 * 60 * 60 * 1000; // 24 hours
-const SESSION_EXPIRY = 24 * 60 * 60 * 1000; // 24 hours
+const SESSION_CLEANUP_INTERVAL = 24 * 60 * 60 * 1000;
+const SESSION_EXPIRY = 24 * 60 * 60 * 1000;
 
 setInterval(() => {
     const now = Date.now();
@@ -44,13 +39,10 @@ setInterval(() => {
     }
 }, SESSION_CLEANUP_INTERVAL);
 
-// POST /api/v1/chat
-// body: { sessionId?: string, message: string }
 router.post('/chat', (req: Request, res: Response) => {
     try {
         const { message, sessionId } = req.body;
         
-        // Validation
         if (!message || typeof message !== 'string' || message.trim().length === 0) {
             return res.status(400).json({ 
                 error: { 
@@ -72,7 +64,6 @@ router.post('/chat', (req: Request, res: Response) => {
         const sid = sessionId || uuidv4();
         const now = new Date().toISOString();
         
-        // Get or create session
         let session = sessionStore.get(sid);
         if (!session) {
             session = {
@@ -83,7 +74,6 @@ router.post('/chat', (req: Request, res: Response) => {
             };
         }
 
-        // Add user message
         const userMessage: ChatMessage = {
             role: 'user',
             content: message.trim(),
@@ -100,7 +90,6 @@ router.post('/chat', (req: Request, res: Response) => {
             sessionMessageCount: session.messages.length 
         });
 
-        // Return session info and stream URL
         res.json({ 
             sessionId: sid, 
             streamUrl: `/api/v1/stream/${sid}`,
@@ -118,7 +107,6 @@ router.post('/chat', (req: Request, res: Response) => {
     }
 });
 
-// SSE stream endpoint: GET /api/v1/stream/:sessionId
 router.get('/stream/:sessionId', async (req: Request, res: Response) => {
     try {
         const { sessionId } = req.params;
@@ -132,11 +120,10 @@ router.get('/stream/:sessionId', async (req: Request, res: Response) => {
             });
         }
 
-        // Set SSE headers
         res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
         res.setHeader('Cache-Control', 'no-cache, no-transform');
         res.setHeader('Connection', 'keep-alive');
-        res.setHeader('X-Accel-Buffering', 'no'); // Disable nginx buffering
+        res.setHeader('X-Accel-Buffering', 'no');
         res.flushHeaders?.();
 
         const session = sessionStore.get(sessionId);
@@ -149,11 +136,9 @@ router.get('/stream/:sessionId', async (req: Request, res: Response) => {
             return res.end();
         }
 
-        // Update last activity
         session.lastActivity = new Date().toISOString();
         sessionStore.set(sessionId, session);
 
-        // Get the latest user message for streaming
         const userMessages = session.messages.filter(m => m.role === 'user');
         if (userMessages.length === 0) {
             res.write(`event: error\n`);
@@ -166,9 +151,8 @@ router.get('/stream/:sessionId', async (req: Request, res: Response) => {
 
         const latestUserMessage = userMessages[userMessages.length - 1];
         
-        // Build conversation history for context (excluding the latest message)
         const conversationHistory = session.messages
-            .slice(0, -1) // Exclude the latest message since we'll send it separately
+            .slice(0, -1)
             .filter(m => m.role !== 'system')
             .map(m => ({ 
                 role: m.role as 'user' | 'assistant', 
@@ -180,7 +164,6 @@ router.get('/stream/:sessionId', async (req: Request, res: Response) => {
             promptLength: latestUserMessage.content.length
         });
 
-        // Start Gemini streaming
         const stream = startGeminiStream(latestUserMessage.content, conversationHistory);
 
         let assistantResponse = '';
@@ -191,13 +174,11 @@ router.get('/stream/:sessionId', async (req: Request, res: Response) => {
             id: uuidv4()
         };
 
-        // Handle client disconnect
         req.on('close', () => {
             logger.info(`Client disconnected from stream ${sessionId}`);
         });
 
         for await (const item of stream) {
-            // Check if client is still connected
             if (req.destroyed) {
                 logger.info(`Stream ${sessionId} terminated - client disconnected`);
                 break;
@@ -212,10 +193,8 @@ router.get('/stream/:sessionId', async (req: Request, res: Response) => {
                     messageId: assistantMessage.id
                 })}\n\n`);
             } else if (item.type === 'artifact') {
-                // Store artifact in session
                 session.artifacts.push(item.artifact);
                 sessionStore.set(sessionId, session);
-
 
                 res.write(`event: artifact\n`);
                 res.write(`data: ${JSON.stringify({ 
@@ -225,15 +204,11 @@ router.get('/stream/:sessionId', async (req: Request, res: Response) => {
             }
         }
 
-
-
-        // Save complete assistant response to session
         assistantMessage.content = assistantResponse;
         session.messages.push(assistantMessage);
         session.lastActivity = new Date().toISOString();
         sessionStore.set(sessionId, session);
 
-        // Send completion event
         res.write(`event: done\n`);
         res.write(`data: ${JSON.stringify({ 
             type: 'done',
