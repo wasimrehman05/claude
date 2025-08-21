@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Editor } from '@monaco-editor/react';
-import { X, Code2, Eye, Download, Copy, Check, ChevronDown, ChevronUp } from 'lucide-react';
+import { X, Code2, Eye, Download, Copy, Check, ChevronDown, ChevronUp, FileCode2 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { motion, AnimatePresence } from 'framer-motion';
 import JSZip from 'jszip';
@@ -111,15 +111,15 @@ export default function ArtifactViewer({
     const downloadAllFiles = useCallback(async () => {
         try {
             const zip = new JSZip();
-            
+
             // Add all artifacts to the zip
             allArtifacts.forEach(artifact => {
                 zip.file(artifact.filename, artifact.content);
             });
-            
+
             // Generate the zip file
             const zipBlob = await zip.generateAsync({ type: 'blob' });
-            
+
             // Create download link
             const url = URL.createObjectURL(zipBlob);
             const a = document.createElement('a');
@@ -183,246 +183,268 @@ export default function ArtifactViewer({
     }, [allArtifacts, currentContent]);
 
     return (
-        <div className="h-full flex flex-col"
-            style={{ backgroundColor: 'var(--claude-artifact-bg)' }}>
-
+        <div className="h-full flex flex-col" style={{ backgroundColor: 'var(--claude-chat-bg)' }}>
             {/* Artifact Navigation */}
-            {allArtifacts.length > 1 && (
-                <div
-                    className="border-b"
-                    style={{ borderColor: 'var(--claude-border)' }}
-                >
+            <div className="flex items-center justify-between py-4 px-0 border-b" style={{ borderColor: 'var(--claude-chat-border)', backgroundColor: 'var(--claude-chat-surface)' }}>
+                <div className="flex items-center gap-3">
                     <button
                         onClick={() => setArtifactListOpen(!artifactListOpen)}
-                        className="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors"
+                        className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-800/50 transition-colors"
+                        style={{ backgroundColor: 'var(--claude-chat-surface)' }}
                     >
-                        <span
-                            className="text-sm font-medium"
-                            style={{ color: 'var(--claude-artifact-text-secondary)', border: '1px solid var(--claude-border)' }}
-                        >
-                            <strong className='text-base'>{title}</strong> ({allArtifacts.length})
+                        <span className="text-sm font-medium" style={{ color: 'var(--claude-chat-text)' }}>
+                            {title || 'Generated Artifacts'}
                         </span>
-                        <div className='flex items-center gap-2'>
-                            {artifactListOpen ? (
-                                <ChevronUp className="w-4 h-4 text-gray-500" />
-                            ) : (
-                                <ChevronDown className="w-4 h-4 text-gray-500" />
-                            )}
-                            <button
-                                onClick={onClose}
-                                className="p-1 rounded-md hover:bg-gray-100 transition-colors"
-                            >
-                                <X className="w-5 h-5 text-gray-500" />
-                            </button>
-                        </div>
+                        <ChevronDown
+                            className={clsx("w-4 h-4 transition-transform", artifactListOpen && "rotate-180")}
+                            style={{ color: 'var(--claude-chat-text-secondary)' }}
+                        />
                     </button>
-                    <AnimatePresence>
-                        {artifactListOpen && (
-                            <motion.div
-                                initial={{ height: 0, opacity: 0 }}
-                                animate={{ height: 'auto', opacity: 1 }}
-                                exit={{ height: 0, opacity: 0 }}
-                                transition={{ duration: 0.2 }}
-                                className="overflow-hidden"
-                            >
-                                <div className="px-4 pb-4 space-y-2 max-h-48 overflow-y-auto">
-                                    {allArtifacts.map((art) => (
-                                        <button
-                                            key={art.id}
-                                            onClick={() => {
-                                                setSelectedArtifact(art);
-                                                setEditedContent('');
-                                                setHasUnsavedChanges(false);
-                                                setArtifactListOpen(false);
-                                                onSelectArtifact?.(art.id!);
-                                            }}
-                                            className={clsx(
-                                                "w-full text-left p-3 rounded-lg border transition-colors",
-                                                art.id === selectedArtifact.id
-                                                    ? "bg-orange-50 border-orange-200"
-                                                    : "bg-white border-gray-200 hover:border-gray-300"
-                                            )}
-                                        >
-                                            <div className="flex items-center justify-between">
-                                                <div>
-                                                    <div
-                                                        className="font-medium text-sm"
-                                                        style={{ color: 'black' }}
-                                                    >
-                                                        {art.filename}
-                                                    </div>
-                                                </div>
-                                                {art.isNew && (
-                                                    <span className="text-xs bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full">
+                </div>
+                <button
+                    onClick={onClose}
+                    className="p-2 rounded-lg hover:bg-gray-700 transition-colors"
+                    style={{ color: 'var(--claude-chat-text-secondary)' }}
+                >
+                    <X className="w-4 h-4" />
+                </button>
+            </div>
+
+            {/* Collapsible File List */}
+            <AnimatePresence>
+                {artifactListOpen && (
+                    <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="border-b overflow-hidden"
+                        style={{ borderColor: 'var(--claude-chat-border)', backgroundColor: 'var(--claude-chat-bg)' }}
+                    >
+                        <div className="p-4 space-y-2">
+                            {allArtifacts.map((artifact) => (
+                                <button
+                                    key={artifact.id}
+                                    onClick={() => setSelectedArtifact(artifact)}
+                                    className={clsx(
+                                        "w-full flex items-center justify-between p-3 rounded-lg border transition-all duration-200 text-left",
+                                        selectedArtifact?.id === artifact.id
+                                            ? "bg-orange-900/20 border-orange-500/30"
+                                            : "bg-gray-800/50 border-gray-600 hover:border-gray-500 hover:bg-gray-800/70"
+                                    )}
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <div className="flex-shrink-0">
+                                            <div
+                                                className="w-8 h-8 rounded-lg flex items-center justify-center text-white"
+                                                style={{ backgroundColor: 'var(--claude-accent)' }}
+                                            >
+                                                <FileCode2 className="w-4 h-4" />
+                                            </div>
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex items-center gap-2">
+                                                <span className="font-medium text-sm truncate" style={{ color: 'var(--claude-chat-text)' }}>
+                                                    {artifact.filename}
+                                                </span>
+                                                {artifact.isNew && (
+                                                    <span className="text-xs px-1.5 py-0.5 rounded-full border bg-green-900/30 text-green-400 border-green-700/30">
                                                         New
                                                     </span>
                                                 )}
                                             </div>
-                                        </button>
-                                    ))}
-                                </div>
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
-                </div>
-            )}
+                                            <div className="flex items-center gap-2 mt-1">
+                                                <span className="text-xs" style={{ color: 'var(--claude-chat-text-secondary)' }}>
+                                                    {artifact.language || 'text'} • {artifact.content.length} chars
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </button>
+                            ))}
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             {/* Header with Title and Tab Bar */}
-            <div
-                className="border-b"
-                style={{ borderColor: 'var(--claude-artifact-border)' }}
-            >
-                {/* Tab Bar */}
-                <div className="flex items-center justify-between px-6 py-3">
-                    <div
-                        className="flex items-center gap-1 p-1 rounded-lg"
-                        style={{ backgroundColor: 'var(--claude-artifact-surface)' }}
+            {/* <div className="flex items-center justify-between p-4 border-b" style={{ borderColor: 'var(--claude-chat-border)', backgroundColor: 'var(--claude-chat-surface)' }}>
+                <div className="flex items-center gap-4">
+                    <h3 className="text-lg font-semibold" style={{ color: 'var(--claude-chat-text)' }}>
+                        {selectedArtifact?.filename || 'No file selected'}
+                    </h3>
+                </div>
+                <div className="flex items-center gap-2">
+                    <button
+                        onClick={downloadAllFiles}
+                        className="flex items-center gap-2 px-3 py-1.5 text-sm bg-gray-800/50 border border-gray-600 rounded-lg hover:bg-gray-700 transition-colors"
+                        style={{ color: 'white' }}
                     >
+                        <Download className="w-4 h-4" />
+                        Download All
+                    </button>
+                </div>
+            </div> */}
+
+            {/* Tab Bar */}
+            {/* <div className="flex border-b" style={{ borderColor: 'var(--claude-chat-border)', backgroundColor: 'var(--claude-chat-bg)' }}>
+                <button
+                    onClick={() => setActiveTab('code')}
+                    className={clsx(
+                        "px-4 py-2 text-sm font-medium transition-colors",
+                        activeTab === 'code'
+                            ? "border-b-2 text-white"
+                            : "text-gray-400 hover:text-gray-300 hover:bg-gray-700"
+                    )}
+                    style={{
+                        borderColor: activeTab === 'code' ? 'var(--claude-accent)' : 'transparent',
+                        backgroundColor: activeTab === 'code' ? 'var(--claude-chat-surface)' : 'transparent'
+                    }}
+                >
+                    Code
+                </button>
+                {hasHtmlArtifact && (
+                    <button
+                        onClick={() => setActiveTab('preview')}
+                        className={clsx(
+                            "px-4 py-2 text-sm font-medium transition-colors",
+                            activeTab === 'preview'
+                                ? "border-b-2 text-white"
+                                : "text-gray-400 hover:text-gray-300 hover:bg-gray-700"
+                        )}
+                        style={{
+                            borderColor: activeTab === 'preview' ? 'var(--claude-accent)' : 'transparent',
+                            backgroundColor: activeTab === 'preview' ? 'var(--claude-chat-surface)' : 'transparent'
+                        }}
+                    >
+                        Preview
+                    </button>
+                )}
+            </div> */}
+
+            <div className="flex items-center justify-between px-1 py-4">
+                <div
+                    className="flex items-center gap-1 p-1 rounded-lg"
+                    style={{ backgroundColor: 'var(--claude-artifact-surface)' }}
+                >
+                    <button
+                        onClick={() => setActiveTab('code')}
+                        className={clsx(
+                            "flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors",
+                            activeTab === 'code'
+                                ? "shadow-sm"
+                                : "hover:bg-gray-100"
+                        )}
+                        style={{
+                            backgroundColor: activeTab === 'code' ? 'var(--claude-artifact-bg)' : 'transparent',
+                            color: activeTab === 'code' ? 'var(--claude-artifact-text)' : 'var(--claude-artifact-text-secondary)'
+                        }}
+                    >
+                        <Code2 className="w-4 h-4" />
+                        Code
+                    </button>
+                    {canPreview && (
                         <button
-                            onClick={() => setActiveTab('code')}
+                            onClick={() => setActiveTab('preview')}
                             className={clsx(
                                 "flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors",
-                                activeTab === 'code'
+                                activeTab === 'preview'
                                     ? "shadow-sm"
                                     : "hover:bg-gray-100"
                             )}
                             style={{
-                                backgroundColor: activeTab === 'code' ? 'var(--claude-artifact-bg)' : 'transparent',
-                                color: activeTab === 'code' ? 'var(--claude-artifact-text)' : 'var(--claude-artifact-text-secondary)'
+                                backgroundColor: activeTab === 'preview' ? 'var(--claude-artifact-bg)' : 'transparent',
+                                color: activeTab === 'preview' ? 'var(--claude-artifact-text)' : 'var(--claude-artifact-text-secondary)'
                             }}
                         >
-                            <Code2 className="w-4 h-4" />
-                            Code
+                            <Eye className="w-4 h-4" />
+                            Preview
                         </button>
-                        {canPreview && (
-                            <button
-                                onClick={() => setActiveTab('preview')}
-                                className={clsx(
-                                    "flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors",
-                                    activeTab === 'preview'
-                                        ? "shadow-sm"
-                                        : "hover:bg-gray-100"
-                                )}
-                                style={{
-                                    backgroundColor: activeTab === 'preview' ? 'var(--claude-artifact-bg)' : 'transparent',
-                                    color: activeTab === 'preview' ? 'var(--claude-artifact-text)' : 'var(--claude-artifact-text-secondary)'
-                                }}
-                            >
-                                <Eye className="w-4 h-4" />
-                                Preview
-                            </button>
-                        )}
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                        {hasUnsavedChanges && (
-                            <>
-                                <button
-                                    onClick={discardChanges}
-                                    className="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-800 transition-colors"
-                                >
-                                    Discard
-                                </button>
-                                <button
-                                    onClick={saveChanges}
-                                    className="px-3 py-1.5 text-sm text-white rounded-lg transition-colors"
-                                    style={{ backgroundColor: 'var(--claude-accent)' }}
-                                >
-                                    Save
-                                </button>
-                            </>
-                        )}
-
-                        <button
-                            onClick={downloadAllFiles}
-                            className="flex items-center gap-2 px-3 py-1.5 text-sm border rounded-lg hover:bg-gray-50 transition-colors"
-                            style={{
-                                borderColor: 'var(--claude-accent)',
-                                color: 'white',
-                                backgroundColor: 'var(--claude-accent)'
-                            }}
-                        >
-                            <Download className="w-4 h-4" />
-                            Download All
-                        </button>
-                    </div>
+                    )}
+                </div>
+                <div className="flex items-center gap-2">
+                    <button
+                        onClick={downloadAllFiles}
+                        className="flex items-center gap-2 px-3 py-1.5 text-sm bg-gray-800/50 border border-gray-600 rounded-lg hover:bg-gray-700 transition-colors"
+                        style={{ color: 'white' }}
+                    >
+                        <Download className="w-4 h-4" />
+                        Download All
+                    </button>
                 </div>
             </div>
 
             {/* Content Area */}
-            <div className="flex-1 overflow-hidden">
-                <AnimatePresence mode="wait">
-                    {activeTab === 'code' && (
-                        <motion.div
-                            key="code"
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            transition={{ duration: 0.2 }}
-                            className="h-full relative"
-                        >
-                            {/* Copy button positioned in top right corner */}
-                            <div className="absolute top-4 right-4 z-10">
-                                <button
-                                    onClick={copyToClipboard}
-                                    className="flex items-center gap-2 px-3 py-1.5 text-sm bg-gray-800/80 backdrop-blur-sm border border-gray-600 rounded-lg hover:bg-gray-700/80 transition-colors"
-                                    style={{ color: 'white' }}
-                                >
-                                    {copied ? (
-                                        <>
-                                            <Check className="w-4 h-4" />
-                                            Copied
-                                        </>
-                                    ) : (
-                                        <>
-                                            <Copy className="w-4 h-4" />
-                                            Copy
-                                        </>
-                                    )}
-                                </button>
-                            </div>
-                            
+            <div className="flex-1 overflow-hidden" style={{ backgroundColor: 'var(--claude-chat-bg)' }}>
+                {activeTab === 'code' && selectedArtifact && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ duration: 0.2 }}
+                        className="h-full relative"
+                    >
+                        {/* Copy Button */}
+                        <div className="absolute top-4 right-4 z-10">
+                            <button
+                                onClick={copyToClipboard}
+                                className="flex items-center gap-2 px-3 py-1.5 text-sm bg-gray-800/80 backdrop-blur-sm border border-gray-600 rounded-lg hover:bg-gray-700/80 transition-colors"
+                                style={{ color: 'white' }}
+                            >
+                                {copied ? (
+                                    <>
+                                        <Check className="w-4 h-4" />
+                                        Copied
+                                    </>
+                                ) : (
+                                    <>
+                                        <Copy className="w-4 h-4" />
+                                        Copy
+                                    </>
+                                )}
+                            </button>
+                        </div>
+
+                        {/* Monaco Editor */}
+                        <div className="h-full">
                             <Editor
                                 height="100%"
-                                language={getEditorLanguage()}
-                                value={currentContent}
-                                onChange={handleEditorChange}
+                                defaultLanguage={selectedArtifact.language || 'text'}
+                                defaultValue={selectedArtifact.content}
                                 theme="vs-dark"
                                 options={{
                                     readOnly: false,
                                     minimap: { enabled: false },
-                                    fontSize: 14,
-                                    lineNumbers: 'on',
-                                    roundedSelection: false,
                                     scrollBeyondLastLine: false,
-                                    automaticLayout: true,
+                                    fontSize: 14,
+                                    lineHeight: 20,
                                     wordWrap: 'on',
-                                    padding: { top: 16, bottom: 16 },
+                                    automaticLayout: true,
+                                }}
+                                onChange={(value) => {
+                                    if (value !== undefined) {
+                                        onUpdateArtifact?.(selectedArtifact.id!, value);
+                                    }
                                 }}
                             />
-                        </motion.div>
-                    )}
-                    {activeTab === 'preview' && canPreview && (
-                        <motion.div
-                            key="preview"
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            transition={{ duration: 0.2 }}
-                            className="h-full flex flex-col"
-                        >
-                            <div className="flex-1">
-                                <iframe
-                                    srcDoc={createCombinedPreview()}
-                                    className="w-full h-full border-0"
-                                    sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals"
-                                    title={`Preview of ${selectedArtifact.filename}`}
-                                    scrolling="yes"
-                                />
-                            </div>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
+                        </div>
+                    </motion.div>
+                )}
+
+                {activeTab === 'preview' && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ duration: 0.2 }}
+                        className="h-full"
+                    >
+                        <iframe
+                            srcDoc={createCombinedPreview()}
+                            className="w-full h-full border-0"
+                            title="Preview"
+                            scrolling="yes"
+                        />
+                    </motion.div>
+                )}
             </div>
         </div>
     );

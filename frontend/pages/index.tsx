@@ -3,7 +3,7 @@ import Head from 'next/head';
 import ChatInput from '../components/ChatInput';
 import MessageList from '../components/MessageList';
 import ArtifactViewer, { Artifact } from '../components/ArtifactViewer';
-import { Loader2, Copy, X } from 'lucide-react';
+import { Loader2, Copy, X, Star } from 'lucide-react';
 import { clsx } from 'clsx';
 import { motion, AnimatePresence } from 'framer-motion';
 import { separateTextFromCode } from '../utils/messageParser';
@@ -276,43 +276,123 @@ export default function Home() {
                 <link rel="icon" href="/favicon.ico" />
             </Head>
 
-            <div className="h-screen flex justify-center w-screen" style={{ backgroundColor: 'var(--claude-chat-bg)' }}>
+            <div className="h-screen flex justify-center w-screen px-8" style={{ backgroundColor: 'var(--claude-chat-bg)' }}>
                 {/* Left Chat Panel - Dark Theme */}
                 <div className={clsx(
                     "flex flex-col transition-all duration-300",
-                    artifactViewerOpen ? "w-3/5" : "w-full"
+                    artifactViewerOpen ? "flex-1 max-w-4xl" : "w-full max-w-4xl"
                 )}
                     style={{
                         backgroundColor: 'var(--claude-chat-bg)',
                         borderRight: artifactViewerOpen ? `1px solid var(--claude-chat-border)` : 'none'
                     }}>
-                    {/* Chat Messages */}
-                    <div className="flex-1 overflow-y-auto scrollbar-thin px-4 py-6">
-                        <div className="max-w-4xl mx-auto">
-                            <MessageList
-                                messages={messages}
-                                artifacts={artifacts}
-                                onSelectMessage={handleSelectMessage}
-                                selectedMessageId={selectedMessageId}
-                            />
-                            {isStreaming && (
-                                <div className="flex justify-center py-4">
-                                    <div className="flex items-center gap-2 text-gray-400">
-                                        <Loader2 className="w-4 h-4 animate-spin" />
-                                        <span className="text-sm">Claude is thinking...</span>
-                                    </div>
-                                </div>
-                            )}
-                            <div ref={messagesEndRef} />
-                        </div>
-                    </div>
 
-                    {/* Chat Input */}
-                    <ChatInput
-                        onSend={sendMessage}
-                        isSending={isStreaming}
-                        onStop={stopStream}
-                    />
+                    {messages.length === 0 ? (
+                        // Landing Page Layout
+                        <div className="flex flex-col h-full justify-center">
+                            {/* Top Section - Free Plan Button */}
+                            <div className="flex justify-center pb-4">
+                                <button className="px-4 py-2 rounded-lg text-sm transition-colors"
+                                    style={{
+                                        backgroundColor: '#262626',
+                                        color: '#a0a0a0',
+                                        border: '1px solid #404040'
+                                    }}>
+                                    <span>Free plan</span>
+                                    <span className="inline-block w-2 h-2 rounded-full bg-green-500 ml-2 mr-2"></span>
+                                    <span className="text-blue-400 underline">Upgrade</span>
+                                </button>
+                            </div>
+
+                            {/* Greeting Message */}
+                            <div className="flex items-center justify-center gap-3 mb-4">
+                                <svg
+                                    height="3em"
+                                    style={{
+                                        flex: "none",
+                                        lineHeight: 1,
+                                    }}
+                                    viewBox="0 0 24 24"
+                                    width="3em"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                >
+                                    <title>{"Claude"}</title>
+                                    <path
+                                        d="M4.709 15.955l4.72-2.647.08-.23-.08-.128H9.2l-.79-.048-2.698-.073-2.339-.097-2.266-.122-.571-.121L0 11.784l.055-.352.48-.321.686.06 1.52.103 2.278.158 1.652.097 2.449.255h.389l.055-.157-.134-.098-.103-.097-2.358-1.596-2.552-1.688-1.336-.972-.724-.491-.364-.462-.158-1.008.656-.722.881.06.225.061.893.686 1.908 1.476 2.491 1.833.365.304.145-.103.019-.073-.164-.274-1.355-2.446-1.446-2.49-.644-1.032-.17-.619a2.97 2.97 0 01-.104-.729L6.283.134 6.696 0l.996.134.42.364.62 1.414 1.002 2.229 1.555 3.03.456.898.243.832.091.255h.158V9.01l.128-1.706.237-2.095.23-2.695.08-.76.376-.91.747-.492.584.28.48.685-.067.444-.286 1.851-.559 2.903-.364 1.942h.212l.243-.242.985-1.306 1.652-2.064.73-.82.85-.904.547-.431h1.033l.76 1.129-.34 1.166-1.064 1.347-.881 1.142-1.264 1.7-.79 1.36.073.11.188-.02 2.856-.606 1.543-.28 1.841-.315.833.388.091.395-.328.807-1.969.486-2.309.462-3.439.813-.042.03.049.061 1.549.146.662.036h1.622l3.02.225.79.522.474.638-.079.485-1.215.62-1.64-.389-3.829-.91-1.312-.329h-.182v.11l1.093 1.068 2.006 1.81 2.509 2.33.127.578-.322.455-.34-.049-2.205-1.657-.851-.747-1.926-1.62h-.128v.17l.444.649 2.345 3.521.122 1.08-.17.353-.608.213-.668-.122-1.374-1.925-1.415-2.167-1.143-1.943-.14.08-.674 7.254-.316.37-.729.28-.607-.461-.322-.747.322-1.476.389-1.924.315-1.53.286-1.9.17-.632-.012-.042-.14.018-1.434 1.967-2.18 2.945-1.726 1.845-.414.164-.717-.37.067-.662.401-.589 2.388-3.036 1.44-1.882.93-1.086-.006-.158h-.055L4.132 18.56l-1.13.146-.487-.456.061-.746.231-.243 1.908-1.312-.006.006z"
+                                        fill="#D97757"
+                                        fillRule="nonzero"
+                                    />
+                                </svg>
+                                <h1 className="text-[36px] font-serif" style={{ color: '#F5F5F5' }}>
+                                    How's it going, Rehman?
+                                </h1>
+                            </div>
+
+                            {/* Centered Chat Input */}
+                            <div className="flex justify-center mb-4">
+                                <div className="w-full max-w-2xl">
+                                    <ChatInput
+                                        onSend={sendMessage}
+                                        isSending={isStreaming}
+                                        onStop={stopStream}
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Suggestion Chips */}
+                            <div className="flex flex-wrap justify-center gap-3">
+                                {[
+                                    { icon: 'PenTool', text: "Write" },
+                                    { icon: 'GraduationCap', text: "Learn" },
+                                    { icon: 'Code', text: "Code" },
+                                    { icon: 'Coffee', text: "Life stuff" },
+                                    { icon: 'Lightbulb', text: "Claude's choice" }
+                                ].map((suggestion, index) => (
+                                    <button
+                                        key={index}
+                                        className="flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors hover:bg-gray-800/50"
+                                        style={{
+                                            borderColor: '#404040',
+                                            color: '#f5f5f5'
+                                        }}
+                                    >
+                                        <span className="text-sm">{suggestion.text}</span>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    ) : (
+                        // Normal Chat Layout
+                        <>
+                            {/* Chat Messages */}
+                            <div className="flex-1 overflow-y-auto scrollbar-thin px-4 py-6">
+                                <div className="max-w-3xl mx-auto">
+                                    <MessageList
+                                        messages={messages}
+                                        artifacts={artifacts}
+                                        onSelectMessage={handleSelectMessage}
+                                        selectedMessageId={selectedMessageId}
+                                    />
+                                    {isStreaming && (
+                                        <div className="flex justify-center py-4">
+                                            <div className="flex items-center gap-2 text-gray-400">
+                                                <Loader2 className="w-4 h-4 animate-spin" />
+                                                <span className="text-sm">Claude is thinking...</span>
+                                            </div>
+                                        </div>
+                                    )}
+                                    <div ref={messagesEndRef} />
+                                </div>
+                            </div>
+
+                            {/* Chat Input at Bottom */}
+                            <ChatInput
+                                onSend={sendMessage}
+                                isSending={isStreaming}
+                                onStop={stopStream}
+                            />
+                        </>
+                    )}
                 </div>
 
                 {/* Right Artifact Panel */}
@@ -320,11 +400,15 @@ export default function Home() {
                     {artifactViewerOpen && selectedArtifact && (
                         <motion.div
                             initial={{ width: 0, opacity: 0 }}
-                            animate={{ width: 'auto', opacity: 1 }}
+                            animate={{ width: '500px', opacity: 1 }}
                             exit={{ width: 0, opacity: 0 }}
                             transition={{ duration: 0.3, ease: 'easeInOut' }}
-                            className="hidden lg:flex flex-col w-2/5"
-                            style={{ backgroundColor: 'var(--claude-artifact-bg)' }}
+                            className="hidden lg:flex flex-col ml-8"
+                            style={{
+                                backgroundColor: 'var(--claude-artifact-bg)',
+                                minWidth: '500px',
+                                maxWidth: '500px'
+                            }}
                         >
                             <ArtifactViewer
                                 artifact={selectedArtifact}

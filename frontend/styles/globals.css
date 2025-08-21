@@ -7,7 +7,9 @@
 
 :root {
   /* Claude.ai exact colors from the image */
-  --claude-chat-bg: #1a1a1a;
+  /* --claude-chat-bg: #1a1a1a; */
+  --claude-chat-bg: #262624;
+  --claude-chat-input-bg: #30302E;
   --claude-chat-surface: #262626;
   --claude-chat-border: #404040;
   --claude-chat-text: #ffffff;

@@ -65,44 +65,6 @@ export default function MessageList({
         return [];
     };
 
-    if (messages.length === 0) {
-        return (
-            <div className="flex flex-col items-center justify-center h-full text-center px-6">
-                <div className="max-w-lg mx-auto">
-                    <div
-                        className="w-14 h-14 mx-auto mb-6 rounded-xl flex items-center justify-center text-white font-bold text-lg"
-                        style={{ backgroundColor: 'var(--claude-accent)' }}
-                    >
-                        C
-                    </div>
-                    <h2
-                        className="text-2xl font-medium mb-3 tracking-tight"
-                        style={{ color: 'var(--claude-chat-text)' }}
-                    >
-                        Hello, I'm Claude
-                    </h2>
-                    <p
-                        className="text-base leading-relaxed mb-6"
-                        style={{ color: 'var(--claude-chat-text-secondary)' }}
-                    >
-                        I'm an AI assistant created by Anthropic. I can help you with coding, writing, analysis, math, and much more.
-                    </p>
-                    <div
-                        className="text-left rounded-lg p-4"
-                        style={{
-                            backgroundColor: 'var(--claude-chat-surface)',
-                            border: `1px solid var(--claude-chat-border)`
-                        }}
-                    >
-                        <p className="text-sm" style={{ color: 'var(--claude-chat-text-secondary)' }}>
-                            <strong>Claude can make mistakes.</strong> Please double-check responses.
-                        </p>
-                    </div>
-                </div>
-            </div>
-        );
-    }
-
     return (
         <div className="space-y-6">
             {messages.map((message, index) => {
@@ -120,38 +82,30 @@ export default function MessageList({
                         {message.role === 'user' ? (
                             // User Message
                             <div className="flex items-start gap-3">
-                                <div
-                                    className="w-8 h-8 rounded-full flex items-center justify-center text-white font-medium text-sm flex-shrink-0"
-                                    style={{ backgroundColor: '#404040' }}
-                                >
-                                    WR
-                                </div>
                                 <div className="flex-1 min-w-0">
                                     <div
-                                        className="inline-block px-4 py-2 rounded-2xl"
+                                        className="inline-block px-3 py-2 rounded-lg"
                                         style={{
-                                            backgroundColor: 'var(--claude-chat-surface)',
-                                            border: `1px solid var(--claude-chat-border)`
+                                            backgroundColor: '#141413'
                                         }}
                                     >
-                                        <p className="text-sm" style={{ color: 'var(--claude-chat-text)' }}>
-                                            {message.text}
-                                        </p>
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-sm font-medium" style={{ backgroundColor: '#C2C0B6', borderRadius: '50%', padding: '4px 4px' }}>
+                                                WR
+                                            </span>
+                                            <span className="text-sm" style={{ color: '#ffffff' }}>
+                                                {message.text}
+                                            </span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         ) : (
                             // Assistant Message
                             <div className="flex items-start gap-3">
-                                <div
-                                    className="w-8 h-8 rounded-xl flex items-center justify-center text-white font-bold text-sm flex-shrink-0"
-                                    style={{ backgroundColor: 'var(--claude-accent)' }}
-                                >
-                                    C
-                                </div>
-                                <div className="flex-1 min-w-0 space-y-4">
+                                <div className="flex-1 min-w-0 space-y-3">
                                     {/* Message Content */}
-                                    <div className="prose prose-claude max-w-none">
+                                    <div className="prose prose-claude max-w-none" style={{ color: '#ffffff' }}>
                                         <ReactMarkdown
                                             remarkPlugins={[remarkGfm]}
                                             rehypePlugins={[rehypeHighlight]}
@@ -160,19 +114,24 @@ export default function MessageList({
                                                     <div
                                                         className="relative rounded-lg overflow-hidden my-4"
                                                         style={{
-                                                            backgroundColor: 'var(--claude-chat-surface)',
-                                                            border: `1px solid var(--claude-chat-border)`
+                                                            backgroundColor: '#262626',
+                                                            border: '1px solid #404040'
                                                         }}
                                                     >
-                                                        <div className="flex items-center justify-between px-4 py-2 border-b"
-                                                            style={{ borderColor: 'var(--claude-chat-border)' }}>
-                                                            <span className="text-sm font-medium" style={{ color: 'var(--claude-chat-text)' }}>
-                                                                {message.artifactTitle || 'Code'}
-                                                            </span>
+                                                        <div className="flex items-center justify-between px-4 py-2.5 border-b"
+                                                            style={{ borderColor: '#404040' }}>
+                                                            <div className="flex flex-col">
+                                                                <span className="text-sm font-medium" style={{ color: '#ffffff' }}>
+                                                                    {message.artifactTitle || 'Code'}
+                                                                </span>
+                                                                <span className="text-xs" style={{ color: '#a0a0a0' }}>
+                                                                    Code
+                                                                </span>
+                                                            </div>
                                                             <button
                                                                 onClick={() => copyToClipboard(message.text, message.id)}
                                                                 className="p-1 rounded hover:bg-gray-700 transition-colors"
-                                                                style={{ color: 'var(--claude-chat-text-secondary)' }}
+                                                                style={{ color: '#a0a0a0' }}
                                                             >
                                                                 {copiedId === message.id ? (
                                                                     <Check className="w-4 h-4" />
@@ -192,9 +151,59 @@ export default function MessageList({
                                                     </div>
                                                 ),
                                                 p: ({ children, ...props }) => (
-                                                    <p {...props} className="text-sm leading-relaxed" style={{ color: 'var(--claude-chat-text)' }}>
+                                                    <p {...props} className="text-sm leading-relaxed mb-3" style={{ color: '#ffffff' }}>
                                                         {children}
                                                     </p>
+                                                ),
+                                                h1: ({ children, ...props }) => (
+                                                    <h1 {...props} className="text-2xl font-bold mb-4" style={{ color: '#ffffff' }}>
+                                                        {children}
+                                                    </h1>
+                                                ),
+                                                h2: ({ children, ...props }) => (
+                                                    <h2 {...props} className="text-xl font-semibold mb-3" style={{ color: '#ffffff' }}>
+                                                        {children}
+                                                    </h2>
+                                                ),
+                                                h3: ({ children, ...props }) => (
+                                                    <h3 {...props} className="text-lg font-medium mb-2" style={{ color: '#ffffff' }}>
+                                                        {children}
+                                                    </h3>
+                                                ),
+                                                ul: ({ children, ...props }) => (
+                                                    <ul {...props} className="list-disc list-inside mb-3 space-y-1" style={{ color: '#ffffff' }}>
+                                                        {children}
+                                                    </ul>
+                                                ),
+                                                ol: ({ children, ...props }) => (
+                                                    <ol {...props} className="list-decimal list-inside mb-3 space-y-1" style={{ color: '#ffffff' }}>
+                                                        {children}
+                                                    </ol>
+                                                ),
+                                                li: ({ children, ...props }) => (
+                                                    <li {...props} className="text-sm" style={{ color: '#ffffff' }}>
+                                                        {children}
+                                                    </li>
+                                                ),
+                                                strong: ({ children, ...props }) => (
+                                                    <strong {...props} className="font-semibold" style={{ color: '#ffffff' }}>
+                                                        {children}
+                                                    </strong>
+                                                ),
+                                                em: ({ children, ...props }) => (
+                                                    <em {...props} className="italic" style={{ color: '#ffffff' }}>
+                                                        {children}
+                                                    </em>
+                                                ),
+                                                code: ({ children, ...props }) => (
+                                                    <code {...props} className="px-1 py-0.5 rounded text-sm font-mono" style={{ backgroundColor: '#262626', color: '#ffffff' }}>
+                                                        {children}
+                                                    </code>
+                                                ),
+                                                blockquote: ({ children, ...props }) => (
+                                                    <blockquote {...props} className="border-l-4 pl-4 my-3 italic" style={{ borderColor: '#404040', color: '#d1d5db' }}>
+                                                        {children}
+                                                    </blockquote>
                                                 )
                                             }}
                                         >
@@ -246,41 +255,41 @@ export default function MessageList({
                                             </motion.button>
                                         </div>
                                     )}
-
-                                    {/* Message Actions */}
-                                    <div className="flex items-center gap-4 pt-2">
-                                        <div className="flex items-center gap-1">
-                                            <Star className="w-4 h-4" style={{ color: 'var(--claude-accent)' }} />
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <button className="p-1 rounded hover:bg-gray-700 transition-colors" style={{ color: 'var(--claude-chat-text-secondary)' }}>
-                                                <Bookmark className="w-4 h-4" />
-                                            </button>
-                                            <button className="p-1 rounded hover:bg-gray-700 transition-colors" style={{ color: 'var(--claude-chat-text-secondary)' }}>
-                                                <ThumbsUp className="w-4 h-4" />
-                                            </button>
-                                            <button className="p-1 rounded hover:bg-gray-700 transition-colors" style={{ color: 'var(--claude-chat-text-secondary)' }}>
-                                                <ThumbsDown className="w-4 h-4" />
-                                            </button>
-                                        </div>
-                                        <div className="flex items-center gap-1">
-                                            <button className="flex items-center gap-1 text-sm hover:bg-gray-700 px-2 py-1 rounded transition-colors" style={{ color: 'var(--claude-chat-text-secondary)' }}>
-                                                <span>Retry</span>
-                                                <RotateCcw className="w-3 h-3" />
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    {/* Disclaimer */}
-                                    <p className="text-xs" style={{ color: 'var(--claude-chat-text-muted)' }}>
-                                        Claude can make mistakes. Please double-check responses.
-                                    </p>
                                 </div>
                             </div>
                         )}
                     </motion.div>
                 );
             })}
+            {
+                messages.length > 0 && (
+                    <div className="flex flex-col justify-center items-end gap-1">
+                        {/* Message Actions */}
+                        <div className="flex gap-3 pt-2">
+                            <div className="flex items-center gap-2">
+                                <button className="p-1 rounded hover:bg-gray-700 transition-colors" style={{ color: '#a0a0a0' }}>
+                                    <ThumbsUp className="w-4 h-4" />
+                                </button>
+                                <button className="p-1 rounded hover:bg-gray-700 transition-colors" style={{ color: '#a0a0a0' }}>
+                                    <ThumbsDown className="w-4 h-4" />
+                                </button>
+                            </div>
+                            <div className="flex items-center gap-1">
+                                <button className="flex items-center gap-1 text-sm hover:bg-gray-700 px-2 py-1 rounded transition-colors" style={{ color: '#a0a0a0' }}>
+                                    <span>Retry</span>
+                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                        {/* Disclaimer */}
+                        <p className="text-xs" style={{ color: '#666666' }}>
+                            Claude can make mistakes. Please double-check responses.
+                        </p>
+                    </div>
+                )
+            }
         </div>
     );
 }
